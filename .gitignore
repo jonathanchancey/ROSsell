@@ -11,4 +11,6 @@
 !/src/**
 # You can be specific with these rules
 # !/some/other/deep/path/**
-!.gitignore 
+!.gitignore
+!/resources/
+!kinetic_file_placer.sh 
