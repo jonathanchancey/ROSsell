@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(finalProj)
+project(assignment)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -9,12 +9,12 @@ project(finalProj)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  std_msgs
   geometry_msgs
   nav_msgs
   tf
   tf2
   tf2_msgs
+  std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -74,7 +74,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   std_msgs
+#   std_msgs  # Or other packages containing msgs
 # )
 
 ################################################
@@ -108,8 +108,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES finalProj
-#  CATKIN_DEPENDS roscpp std_msgs
+#  LIBRARIES assignment
+#  CATKIN_DEPENDS roscpp
 #  DEPENDS system_lib
 )
 
@@ -123,16 +123,27 @@ include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
 )
-add_executable(exploreNode src/exploreNode.cpp)
-add_executable(obRec src/obRec.cpp)
+add_executable(moverobots src/moverobot.cpp)
+add_executable(drifts src/drift.cpp)
+add_executable(gotopositions src/gotoposition.cpp)
+add_executable(transformationss src/transformations.cpp)
+add_executable(gotos src/goto.cpp)
+add_executable(gotopoints src/gotopoint.cpp)
+add_executable(tours src/tour.cpp)
+add_executable(navigates src/navigate.cpp)
 
-target_link_libraries(exploreNode ${catkin_LIBRARIES})
-target_link_libraries(obRec ${catkin_LIBRARIES})
-
+target_link_libraries(moverobots ${catkin_LIBRARIES})
+target_link_libraries(drifts ${catkin_LIBRARIES})
+target_link_libraries(gotopositions ${catkin_LIBRARIES})
+target_link_libraries(transformationss ${catkin_LIBRARIES})
+target_link_libraries(gotos ${catkin_LIBRARIES})
+target_link_libraries(gotopoints ${catkin_LIBRARIES})
+target_link_libraries(tours ${catkin_LIBRARIES})
+target_link_libraries(navigates ${catkin_LIBRARIES})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/finalProj.cpp
+#   src/${PROJECT_NAME}/assignment.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -143,7 +154,7 @@ target_link_libraries(obRec ${catkin_LIBRARIES})
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/finalProj_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/assignment_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -200,7 +211,7 @@ target_link_libraries(obRec ${catkin_LIBRARIES})
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_finalProj.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_assignment.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
