@@ -7,7 +7,7 @@ using namespace ros;
 
 
 int main(int argc, char**argv){
-    init(argc,argv,"moverobot");
+    init(argc,argv,"obRec");
     NodeHandle nh;
 
     Publisher movePub = nh.advertise<geometry_msgs::Twist>("/pioneer/cmd_vel", 1000);

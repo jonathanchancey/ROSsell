@@ -123,23 +123,13 @@ include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
 )
-add_executable(moverobots src/moverobot.cpp)
-add_executable(drifts src/drift.cpp)
-add_executable(gotopositions src/gotoposition.cpp)
-add_executable(transformationss src/transformations.cpp)
-add_executable(gotos src/goto.cpp)
-add_executable(gotopoints src/gotopoint.cpp)
-add_executable(tours src/tour.cpp)
-add_executable(navigates src/navigate.cpp)
+add_executable(exploreNode src/exploreNode.cpp)
+add_executable(obRec src/obRec.cpp)
 
-target_link_libraries(moverobots ${catkin_LIBRARIES})
-target_link_libraries(drifts ${catkin_LIBRARIES})
-target_link_libraries(gotopositions ${catkin_LIBRARIES})
-target_link_libraries(transformationss ${catkin_LIBRARIES})
-target_link_libraries(gotos ${catkin_LIBRARIES})
-target_link_libraries(gotopoints ${catkin_LIBRARIES})
-target_link_libraries(tours ${catkin_LIBRARIES})
-target_link_libraries(navigates ${catkin_LIBRARIES})
+
+target_link_libraries(exploreNode ${catkin_LIBRARIES})
+target_link_libraries(obRec ${catkin_LIBRARIES})
+
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
