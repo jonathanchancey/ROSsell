@@ -13,4 +13,5 @@
 # !/some/other/deep/path/**
 !.gitignore
 !/resources/
-!kinetic_file_placer.sh 
+!kinetic_file_placer.sh
+.vscode/
