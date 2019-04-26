@@ -38,8 +38,8 @@ int main(int argc, char**argv){
 
     while(ok()){
         Duration(2).sleep();
-        goal.target_pose.pose.position.x = rand() % 10 + -10;
-        goal.target_pose.pose.position.y = rand() % 10 + -10;
+        goal.target_pose.pose.position.x = rand() % 9 + -9;
+        goal.target_pose.pose.position.y = rand() % 9 + -9;
         ROS_INFO_STREAM(goal);
         ac.sendGoal(goal);
         ac.waitForResult();
