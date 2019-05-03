@@ -41,9 +41,6 @@ int main(int argc, char**argv){
         pointAllocator++;
     }
 
-
-
-
     cout << "navPoints[0].y = " << navPoints[0].y << endl;
 
 
