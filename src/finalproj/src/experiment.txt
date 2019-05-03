@@ -1,0 +1,157 @@
+#include <ros/ros.h>
+#include <geometry_msgs/Twist.h>
+#include <sensor_msgs/LaserScan.h>
+#include <laser_geometry/laser_geometry.h>
+#include <sensor_msgs/PointCloud.h>
+#include <math.h>
+#include <sensor_msgs/ChannelFloat32.h>
+#include <geometry_msgs/Point32.h>
+#include <stdio.h>
+#include <tf/transform_listener.h>
+
+
+using namespace ros;
+
+
+//use transformLaserScanToPointCloud as it'll be more accurate with movement
+laser_geometry::LaserProjection projector;
+tf::TransformListener listener;
+
+// void cloud_cb(const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
+//   pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;
+//   pcl::PCLPointCloud2ConstPtr cloudPtr(cloud);
+//   pcl::PCLPointCloud2 cloud_filtered;
+
+//   pcl_conversions::toPCL(*cloud_msg, *cloud);
+
+//   pcl::VoxelGrid<pcl::PCLPointCloud2> sor;
+//   sor.setInputCloud(cloudPtr);
+//   sor.setLeafSize(0.1,0.1,0.1);
+//   sor.filter(cloud_filtered);
+
+//   sensor_msgs::PointCloud2 output;
+//   pcl_conversions::fromPCL(cloud_filtered,output);
+
+//   pub.publish(output);
+// }
+
+
+void scanMessageReceived(const sensor_msgs::LaserScan&msg) {
+  sensor_msgs::PointCloud converted;
+  // if(!listener.waitForTransform(msg.header.frame_id,"/base_link",msg.header.stamp + Duration().fromSec(msg.ranges.size()*msg.time_increment),Duration(1.0))){
+  //    return;
+  // }
+  projector.transformLaserScanToPointCloud("/base_link",msg,converted,listener);
+
+
+
+
+
+
+    ROS_INFO_STREAM("Received " << msg.ranges.size() << " points");
+      ROS_INFO_STREAM("Converted " << converted.points.size() << " points");
+        ROS_INFO_STREAM("Points expressed in frame " << converted.header.frame_id);
+
+          // pcl::PCLPointCloud* cloud = new pcl::PCLPointCloud;
+  // pcl::PCLPointCloudConstPtr cloudPtr(cloud);
+  // pcl::PCLPointCloud cloud_filtered;
+
+  // pcl_conversions::toPCL(converted, *cloud);
+
+  // pcl::VoxelGrid<pcl::PCLPointCloud> sor;
+  // sor.setInputCloud(cloudPtr);
+  // sor.setLeafSize(0.1,0.1,0.1);
+  // sor.filter(cloud_filtered);
+
+  // sensor_msgs::PointCloud output;
+  // pcl_conversions::fromPCL(cloud_filtered,output);
+  
+  //ROS_INFO_STREAM("Received " << msg.ranges.size() << " points");
+  //ROS_INFO_STREAM("Converted " << converted.points.size() << " points");
+  //ROS_INFO_STREAM("Points expressed in frame " << converted.header.frame_id);
+        // for(int c = 0; c < converted.points.size(); c++){
+        //     ROS_INFO_STREAM("point num is " << c);
+        //   ROS_INFO_STREAM(converted.points.at(c));
+          //ROS_INFO_STREAM(converted.channels.at(c));
+      //}
+      // for(int c = 0; c < msg.intensities.size(); c++){
+      //     ROS_INFO_STREAM("num " << c << "has insensity of " << msg.intensities[c]);
+      // }
+}
+
+int main(int argc,char ** argv) {
+  init(argc,argv,"obRec");
+  NodeHandle nh;
+  Subscriber subScan = nh.subscribe("/scan",1000,&scanMessageReceived);
+  Publisher pubPointCloud = nh.advertise<sensor_msgs::PointCloud>("/pubPtCloud", 5000);
+  // Publisher pub = nh.advertise<sensor_msgs::PointCloud2>("/pubPtCloudTwo", 6000);
+  // Publisher pubo = nh.advertise<pcl_msgs::ModelCoefficients>("/pubMdl", 4000);
+
+
+  // while(ok){
+  //     spinOnce();
+
+//     for(int c = 0; c < converted.points.size(); c++){
+//         for(int i = 1; i < converted.points.size(); i++){
+//             if(converted.points[c].x = converted.points[i].x){
+//                 if(fabs(converted.points[c].y - converted.points[i].y) == 0.57){
+//                     ROS_INFO_STREAM("It's a mail box at (" << converted.points[c].x << "," << converted.points[c].y << ")");
+//                 }
+//             }
+        
+//             if(converted.points[c].y = converted.points[i].y){
+//                 if(fabs(converted.points[c].x - converted.points[i].x) == 0.57){
+//                     ROS_INFO_STREAM("It's a mail box at (" << converted.points[c].x << "," << converted.points[c].y << ")");
+//         }
+//     }
+//     }
+// }
+// Duration(3).sleep();
+// spinOnce();
+
+  // pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2;
+  // pcl::PCLPointCloud2ConstPtr cloudPtr(cloud);
+  // pcl::PCLPointCloud2 cloud_filtered;
+
+  // pcl_conversions::toPCL(converted, *cloud);
+
+  // pcl::VoxelGrid<pcl::PCLPointCloud2> sor;
+  // sor.setInputCloud(cloudPtr);
+  // sor.setLeafSize(0.1,0.1,0.1);
+  // sor.filter(cloud_filtered);
+
+  // sensor_msgs::PointCloud2 output;
+  // pcl_conversions::fromPCL(cloud_filtered,output);
+
+
+  // pub.publish(output);
+
+
+
+
+  // pcl::PointCloud<pcl::PointXYZ> clod;
+  // pcl::fromROSMsg (output, clod);
+  // pcl::ModelCoefficients coefficients;
+  // pcl::PointIndices inliers;
+
+  // pcl::SACSegmentation<pcl::PointXYZ> seg;
+  // seg.setOptimizeCoefficients(true);
+  // seg.setModelType(pcl::SACMODEL_PLANE);
+  // seg.setMethodType(pcl::SAC_RANSAC);
+  // seg.setDistanceThreshold(0.01);
+
+  // seg.setInputCloud(clod.makeShared());
+  // seg.segment (inliers, coefficients);
+
+  // pcl_msgs::ModelCoefficients ros_coefficients;
+  // pcl_conversions::fromPCL(coefficients, ros_coefficients);
+  // pubo.publish(ros_coefficients);
+
+
+
+
+    //pubPointCloud.publish(converted);
+
+  //   spinOnce();
+  // }
+}

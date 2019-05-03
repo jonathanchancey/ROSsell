@@ -1,0 +1,66 @@
+#include <ros/ros.h>
+#include <sensor_msgs/LaserScan.h>
+#include <laser_geometry/laser_geometry.h>
+#include <sensor_msgs/PointCloud.h>
+#include <math.h>
+#include <sensor_msgs/ChannelFloat32.h>
+#include <geometry_msgs/Point32.h>
+#include <stdio.h>
+#include <tf/transform_listener.h>
+#include <tf/transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <tf2_msgs/TFMessage.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf/tf.h>
+
+
+using namespace ros;
+using namespace std;
+
+
+laser_geometry::LaserProjection projector;
+sensor_msgs::LaserScan laScan;
+
+
+
+
+
+void scanMessageReceived(const sensor_msgs::LaserScan msg) {
+  laScan = msg;
+}
+
+int main(int argc,char ** argv) {
+  init(argc,argv,"obRec");
+  NodeHandle nh;
+
+  sensor_msgs::PointCloud converted;
+  tf::TransformListener tfListener;
+  tf::StampedTransform tfStamped;
+
+
+  Subscriber subScan = nh.subscribe("/scan",1000,&scanMessageReceived);
+  Publisher pubPointCloud = nh.advertise<sensor_msgs::PointCloud>("/pubPtCloud", 5000);
+  
+  while(ok){
+
+    if(!tfListener.waitForTransform("base_link", "/top_plate_link/base_laser_mount/base_laser", Time::now(), Duration(10.0))){
+
+    }
+    else{
+      tfListener.lookupTransform("/base_link", "/top_plate_link/base_laser_mount/base_laser", Time::now(), tfStamped);
+    }
+
+ 
+
+  projector.transformLaserScanToPointCloud("/base_link",laScan,converted,tfListener);
+
+
+  ROS_INFO_STREAM("Received " << laScan.ranges.size() << " points");
+  ROS_INFO_STREAM("Converted " << converted.points.size() << " points");
+  ROS_INFO_STREAM("Points expressed in frame " << converted.header.frame_id);
+  spin();
+
+  }
+
+}
