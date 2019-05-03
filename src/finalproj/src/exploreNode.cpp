@@ -14,6 +14,7 @@ using namespace std;
 
 struct Coords { int x; int y; }; // s.d is a flexible array member 
 Coords navPoints[19];
+Coords travelPoints[19];
 
 int main(int argc, char**argv){
     init(argc,argv,"exploreNode");
@@ -35,17 +36,13 @@ int main(int argc, char**argv){
     double pointAllocator = -9;
 
     for(int c = 0; c < 19; c++){
-        pointArrayX[c] = pointAllocator;
-        pointArrayY[c] = pointAllocator;
+        navPoints[c].x = pointAllocator;
+        navPoints[c].y = pointAllocator;
         pointAllocator++;
     }
 
-    // Coords xy;
 
 
-
-    navPoints[0].x = 0;
-    navPoints[0].y = 1;
 
     cout << "navPoints[0].y = " << navPoints[0].y << endl;
 
