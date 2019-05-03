@@ -9,11 +9,11 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-
 using namespace ros;
 using namespace std;
 
-
+struct Coords { int x; int y; }; // s.d is a flexible array member 
+Coords navPoints[19];
 
 int main(int argc, char**argv){
     init(argc,argv,"exploreNode");
@@ -40,6 +40,14 @@ int main(int argc, char**argv){
         pointAllocator++;
     }
 
+    // Coords xy;
+
+
+
+    navPoints[0].x = 0;
+    navPoints[0].y = 1;
+
+    cout << "navPoints[0].y = " << navPoints[0].y << endl;
 
 
     Rate rate(1);
@@ -48,10 +56,13 @@ int main(int argc, char**argv){
 
     while(ok()){
         Duration(1).sleep();
+        // traveled array storing poitns of 
+
+        // detect if current location has been travelled to 
+
         for(int x = 0;x < 19; x++){ //goes from (-9,-9) thru all the y's then up an x
             goal.target_pose.pose.position.x = pointArrayX[x];
             // cout << "(" << pointArrayX[x];
-
             for(int y = 0; y < 19; y++){
                 goal.target_pose.pose.position.y = pointArrayY[y];
                 // cout << "," << pointArrayY[y] << ")" << endl;
@@ -61,14 +72,9 @@ int main(int argc, char**argv){
                 if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
                     spinOnce();
                     ROS_INFO_STREAM("Success");
-        } 
+                }
             }
             ROS_INFO_STREAM("All points have been visited!");
-
         }
-
-
-
     }
-
 }
