@@ -93,7 +93,7 @@ public:
 
 
     vg.setInputCloud (pclCloud);
-    vg.setLeafSize (0.03f, 0.03f, 0.03f); //originally .01
+    vg.setLeafSize (0.02f, 0.02f, 0.02f); //originally .01
     vg.filter (*cloud_filtered);
     std::cout << "PointCloud after filtering has: " << cloud_filtered->points.size ()  << " data points." << std::endl;
 
@@ -108,7 +108,7 @@ public:
   seg.setModelType (pcl::SACMODEL_LINE);
   seg.setMethodType (pcl::SAC_RANSAC);
   seg.setMaxIterations (100);
-  seg.setDistanceThreshold (0.002); //0.01
+  seg.setDistanceThreshold (0.02); //0.01
 
   int i=0, nr_points = (int) cloud_filtered->points.size ();
   while (cloud_filtered->points.size () > 0.3 * nr_points) //0.3
