@@ -12,9 +12,20 @@
 using namespace ros;
 using namespace std;
 
+
+
+
 struct Coords { int x; int y; }; // s.d is a flexible array member 
 Coords navPoints[19];
-Coords travelPoints[19];
+Coords traveledPoints[19];
+geometry_msgs::Vector3 pos;
+Coords currentLoc;
+
+void Int16NextpointReceived(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& pmsg)
+{
+    pos.x = pmsg->pose.pose.position.x;
+    pos.y = pmsg->pose.pose.position.y;
+}
 
 int main(int argc, char**argv){
     init(argc,argv,"exploreNode");
@@ -24,6 +35,8 @@ int main(int argc, char**argv){
     ROS_INFO_STREAM("Waiting for server to be available...");
     while (!ac.waitForServer()) {}
     ROS_INFO_STREAM("done!");
+
+    ros::Subscriber pose_sub = nh.subscribe("/amcl_pose", 1000, Int16NextpointReceived);
 
     move_base_msgs::MoveBaseGoal goal;
 
@@ -50,7 +63,20 @@ int main(int argc, char**argv){
 
     while(ok()){
         Duration(1).sleep();
-        // traveled array storing poitns of 
+        // traveled array storing poitns of positions the robot has been
+        
+        ROS_INFO("pos.x = %f\t pos.y  = %f",pos.x,pos.y);
+
+        currentLoc.x = pos.x;
+        currentLoc.y = pos.y;
+        // bool exists = std::any_of(std::begin(navPoints), std::end(navPoints), [&](Coords i)
+        // {
+        //     return i == currentLoc;
+        // });
+
+        // if (nearestPoint(pos.x,pos.y)){
+
+        // }
 
         // detect if current location has been travelled to 
 
@@ -70,5 +96,6 @@ int main(int argc, char**argv){
             }
             ROS_INFO_STREAM("All points have been visited!");
         }
+
     }
 }
