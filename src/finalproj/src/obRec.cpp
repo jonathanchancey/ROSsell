@@ -5,6 +5,27 @@
 #include "message_filters/subscriber.h"
 #include "laser_geometry/laser_geometry.h"
 #include "geometry_msgs/Point32.h"
+#include <sensor_msgs/point_cloud_conversion.h>
+#include <sensor_msgs/PointCloud2.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl-1.7/pcl/point_cloud.h>
+#include <pcl-1.7/pcl/segmentation/extract_clusters.h>
+#include <pcl-1.7/pcl/kdtree/kdtree.h>
+#include <pcl-1.7/pcl/common/common.h>
+#include <pcl-1.7/pcl/common/projection_matrix.h>
+#include <pcl-1.7/pcl/impl/point_types.hpp>
+#include <pcl-1.7/pcl/ModelCoefficients.h>
+#include <pcl-1.7/pcl/PolygonMesh.h>
+#include <pcl-1.7/pcl/io/pcd_io.h>
+#include <pcl-1.7/pcl/io/point_cloud_image_extractors.h>
+
+
+using namespace ros;
+
+
+sensor_msgs::PointCloud2 ptCloud;
+pcl::PointCloud<pcl::PointXYZ> pclCloud;
+
 
 class LaserScanToPointCloud{
 
@@ -16,6 +37,9 @@ public:
   message_filters::Subscriber<sensor_msgs::LaserScan> laser_sub_;
   tf::MessageFilter<sensor_msgs::LaserScan> laser_notifier_;
   ros::Publisher scan_pub_;
+    ros::Publisher scan_pub2_;
+
+
 
   LaserScanToPointCloud(ros::NodeHandle n) : 
     n_(n),
@@ -26,6 +50,8 @@ public:
       boost::bind(&LaserScanToPointCloud::scanCallback, this, _1));
     laser_notifier_.setTolerance(ros::Duration(0.01));
     scan_pub_ = n_.advertise<sensor_msgs::PointCloud>("/my_cloud",1);
+      scan_pub2_ = n_.advertise<sensor_msgs::PointCloud2>("/my_cloud2",1);
+
   }
 
   void scanCallback (const sensor_msgs::LaserScan::ConstPtr& scan_in)
@@ -43,38 +69,20 @@ public:
     }
     
     // Do something with cloud.
-
-    // for(int c = 0; c < cloud.points.size();c++){
-    //   ROS_INFO(cloud.points[c].x);
-    //   ROS_INFO_STREAM(cloud.points[c].y);
-
-    // }
-    int seqNum = cloud.header.seq;
-    int c =0;
-    // while(cloud.header.seq == seqNum){
-    //   //ROS_INFO_STREAM(cloud.header.seq);
-    //   ROS_INFO_STREAM(cloud.points[c].x);
-    //   ROS_INFO_STREAM(cloud.points[c].y);
-    //   c++;
-    // }
-
-    for(int c = 0; c < cloud.points.size();c++){
-      ROS_INFO_STREAM(cloud.header.seq);
-      ROS_INFO_STREAM(cloud.points[c].x);
-      ROS_INFO_STREAM(cloud.points[c].y);
-}
-
-    
-    
+    sensor_msgs::convertPointCloudToPointCloud2(cloud, ptCloud);
+    pcl::fromROSMsg(ptCloud,pclCloud);
+    //pcl::extractEuclideanClusters ec();
 
 
 
-    //end
 
     scan_pub_.publish(cloud);
+    scan_pub2_.publish(ptCloud);
 
   }
 };
+
+
 
 int main(int argc, char** argv)
 {
@@ -82,8 +90,10 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "obRec");
   ros::NodeHandle n;
   LaserScanToPointCloud lstopc(n);
-  
-  ros::spin();
+
+  spin();
+
   
   return 0;
+
 }
