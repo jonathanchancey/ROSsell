@@ -64,20 +64,7 @@ int main(int argc, char**argv){
         currentLoc.x = pos.x;
         currentLoc.y = pos.y;
 
-        // TODO fix magic number
-        // checks if current location is in traveled location array
-        for (int i = 0; i < 19; i++){
-            
-            if ((traveledPoints[i].x == currentLoc.x) && (traveledPoints[i].y == currentLoc.y)){
-                // Wow this if statement should be inverted. 
-                // TODO maybe do ^
-            } else {
-                printf("Adding %d,%d to traveledPoints", currentLoc.x, currentLoc.y);
-                traveledPoints[i].x = currentLoc.x;
-                traveledPoints[i].y = currentLoc.y;
-            }
-
-        }
+        
 
         for(int x = 0;x < 19; x++){ //goes from (-9,-9) thru all the y's then up an x
             // cout << "(" << pointArrayX[x];
@@ -88,8 +75,22 @@ int main(int argc, char**argv){
                 // cout << "," << pointArrayY[y] << ")" << endl;
                 ROS_INFO_STREAM(goal);
                 ac.sendGoal(goal);
+                // TODO fix magic number
+                // checks if current location is in traveled location array
+                for (int i = 0; i < 19; i++){
+                    
+                    if ((traveledPoints[i].x == currentLoc.x) && (traveledPoints[i].y == currentLoc.y)){
+                        // Wow this if statement should be inverted. 
+                        // TODO maybe do ^
+                    } else {
+                        printf("Adding %d,%d to traveledPoints", currentLoc.x, currentLoc.y);
+                        traveledPoints[i].x = currentLoc.x;
+                        traveledPoints[i].y = currentLoc.y;
+                    }
+                }
                 while (ac.getState()==actionlib::SimpleClientGoalState::PENDING){
                     // checks if next point has already been travelled
+                    printf("entering PENDING while");
                     for (int i = 0; i < 19; i++){
                         if ((traveledPoints[i].x == navPoints[x].x) && (traveledPoints[i].y == navPoints[y].y)){
                             // If this wasn't for sure 19x19 then this would get big(slOw)
