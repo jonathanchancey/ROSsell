@@ -15,6 +15,15 @@ roslaunch husky_gazebo huskyfinal.launch
 rosrun finalproj exploreNode
 rosrun finalproj obRec
 ```
+### rviz usage 
+
+```
+rosrun rviz rviz
+```
+
+Click `Add` in the bottom left, add the element `PointCloud2` and click `Okay`
+
+Click the dropdown on the new `PointCloud2` visualization and set the topic to `/my_cloud2`
 
 ### Consider adding aliases to your `~/.bashrc`
 
