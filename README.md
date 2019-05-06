@@ -15,7 +15,7 @@ roslaunch husky_gazebo huskyfinal.launch
 rosrun finalproj exploreNode
 rosrun finalproj obRec
 ```
-### rviz usage 
+#### rviz usage 
 
 ```
 rosrun rviz rviz
