@@ -93,7 +93,7 @@ public:
 
 
     vg.setInputCloud (pclCloud);
-    vg.setLeafSize (0.03f, 0.03f, 0.03f); //originally .01
+    vg.setLeafSize (0.01f, 0.01f, 0.01f); //originally .01
     vg.filter (*cloud_filtered);
     std::cout << "PointCloud after filtering has: " << cloud_filtered->points.size ()  << " data points." << std::endl;
 
@@ -103,15 +103,14 @@ public:
   pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
   pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_plane (new pcl::PointCloud<pcl::PointXYZ> ());
-  pcl::PCDWriter writer;
-  seg.setOptimizeCoefficients (true);
+  seg.setOptimizeCoefficients (true); //true
   seg.setModelType (pcl::SACMODEL_LINE);
   seg.setMethodType (pcl::SAC_RANSAC);
   seg.setMaxIterations (100);
   seg.setDistanceThreshold (0.01); //0.01
 
   int i=0, nr_points = (int) cloud_filtered->points.size ();
-  while (cloud_filtered->points.size () > 0.034 * nr_points) //0.3
+  while (cloud_filtered->points.size () > 0.1 * nr_points) //0.3
   {
     // Segment the largest planar component from the remaining cloud
     seg.setInputCloud (cloud_filtered);
@@ -139,10 +138,6 @@ public:
   }
 
     pcl::toROSMsg(*cloud_filtered,ptCloudFiltered);
-
-
-
-
 
     scan_pub_.publish(cloud);
     scan_pub2_.publish(ptCloudFiltered);
