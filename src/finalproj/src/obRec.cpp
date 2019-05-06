@@ -141,6 +141,7 @@ public:
 
     scan_pub_.publish(cloud);
     scan_pub2_.publish(ptCloudFiltered);
+    for(int c = 0; c < ptCloudFiltered.)
 
   }
 };
