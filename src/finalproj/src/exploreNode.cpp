@@ -62,9 +62,7 @@ int main(int argc, char**argv){
         ROS_INFO("pos.x = %f\t pos.y  = %f",pos.x,pos.y);
 
         currentLoc.x = pos.x;
-        currentLoc.y = pos.y;
-
-        
+        currentLoc.y = pos.y;        
 
         for(int x = 0;x < 19; x++){ //goes from (-9,-9) thru all the y's then up an x
             // cout << "(" << pointArrayX[x];
@@ -73,28 +71,30 @@ int main(int argc, char**argv){
                 goal.target_pose.pose.position.x = navPoints[x].x;
                 goal.target_pose.pose.position.y = navPoints[y].y;
                 // cout << "," << pointArrayY[y] << ")" << endl;
-                ROS_INFO_STREAM(goal);
+                printf("-------- Going to %d,%d --------\n", navPoints[x].x, navPoints[y].y);
+                // ROS_INFO_STREAM(goal);
                 ac.sendGoal(goal);
+
                 // TODO fix magic number
                 // checks if current location is in traveled location array
                 for (int i = 0; i < 19; i++){
-                    
                     if ((traveledPoints[i].x == currentLoc.x) && (traveledPoints[i].y == currentLoc.y)){
+                        // printf("not adding point");
                         // Wow this if statement should be inverted. 
                         // TODO maybe do ^
                     } else {
-                        printf("Adding %d,%d to traveledPoints", currentLoc.x, currentLoc.y);
+                        printf("Adding %d,%d to traveledPoints\n", currentLoc.x, currentLoc.y);
                         traveledPoints[i].x = currentLoc.x;
                         traveledPoints[i].y = currentLoc.y;
                     }
                 }
                 while (ac.getState()==actionlib::SimpleClientGoalState::PENDING){
                     // checks if next point has already been travelled
-                    printf("entering PENDING while");
+                    printf("We are in the PENDING while loop.  \n");
                     for (int i = 0; i < 19; i++){
                         if ((traveledPoints[i].x == navPoints[x].x) && (traveledPoints[i].y == navPoints[y].y)){
                             // If this wasn't for sure 19x19 then this would get big(slOw)
-                            printf("Skipping point %d,%d as was in traveledPoints", navPoints[x].x, navPoints[y].y);
+                            printf("Skipping point %d,%d as was in traveledPoints\n", navPoints[x].x, navPoints[y].y);
                             goto ENDOF2NDFOR;
                         }
                     }
@@ -105,8 +105,9 @@ int main(int argc, char**argv){
                     spinOnce();
                     ROS_INFO_STREAM("Success");
                 }
+                printf("before ENDOF2NDFOR\n");
                 ENDOF2NDFOR:
-                printf("welp");
+                printf("after ENDOF2NDFOR\n");
             }
             ROS_INFO_STREAM("All points have been visited!");
         }
