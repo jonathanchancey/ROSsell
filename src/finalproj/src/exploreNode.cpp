@@ -53,9 +53,7 @@ int main(int argc, char**argv){
 
     cout << "navPoints[0].y = " << navPoints[0].y << endl;
 
-
     Rate rate(1);
-
 
     while(ok()){
         Duration(1).sleep();
@@ -80,39 +78,34 @@ int main(int argc, char**argv){
             }
 
         }
-        // bool exists = std::any_of(std::begin(navPoints), std::end(navPoints), [&](Coords i)
-        // {
-        //     return i == currentLoc;
-        // });
-
-        // if (nearestPoint(pos.x,pos.y)){
-
-        // }
-
-        // detect if current location has been travelled to 
 
         for(int x = 0;x < 19; x++){ //goes from (-9,-9) thru all the y's then up an x
             // cout << "(" << pointArrayX[x];
             for(int y = 0; y < 19; y++){
-                // checks if next point has already been travelled
-                for (int i = 0; i < 19; i++){
-                    if ((traveledPoints[i].x == navPoints[x].x) && (traveledPoints[i].y == navPoints[y].y)){
-                        // If this wasn't for sure 19x19 then this would get big(slOw)
-                        printf("Skipping point %d,%d as was in traveledPoints", navPoints[x].x, navPoints[y].y);
-                        goto ENDOF2NDFOR;
-                    }
-                }
+                
                 goal.target_pose.pose.position.x = navPoints[x].x;
                 goal.target_pose.pose.position.y = navPoints[y].y;
                 // cout << "," << pointArrayY[y] << ")" << endl;
                 ROS_INFO_STREAM(goal);
                 ac.sendGoal(goal);
-                ac.waitForResult(Duration(20));
+                while (ac.getState()==actionlib::SimpleClientGoalState::PENDING){
+                    // checks if next point has already been travelled
+                    for (int i = 0; i < 19; i++){
+                        if ((traveledPoints[i].x == navPoints[x].x) && (traveledPoints[i].y == navPoints[y].y)){
+                            // If this wasn't for sure 19x19 then this would get big(slOw)
+                            printf("Skipping point %d,%d as was in traveledPoints", navPoints[x].x, navPoints[y].y);
+                            goto ENDOF2NDFOR;
+                        }
+                    }
+                    Duration(1).sleep();
+                }
+                // ac.waitForResult(Duration(20));
                 if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
                     spinOnce();
                     ROS_INFO_STREAM("Success");
                 }
                 ENDOF2NDFOR:
+                printf("welp");
             }
             ROS_INFO_STREAM("All points have been visited!");
         }
