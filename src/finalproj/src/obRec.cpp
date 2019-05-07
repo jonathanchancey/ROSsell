@@ -33,24 +33,17 @@
 #include <pcl-1.7/pcl/PointIndices.h>
 #include <pcl_conversions/pcl_conversions.h>
 
-
-
 using namespace ros;
 using namespace std;
-
 
 sensor_msgs::PointCloud2 ptCloud;
 sensor_msgs::PointCloud2 ptCloudFiltered;
 sensor_msgs::PointCloud2 ptCloudAux;
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
 
-
-
-
 class LaserScanToPointCloud{
 
 public:
-
   ros::NodeHandle n_;
   laser_geometry::LaserProjection projector_;
   tf::TransformListener listener_;
@@ -59,9 +52,6 @@ public:
   ros::Publisher scan_pub_;
   ros::Publisher scan_pub2_;
   ros::Publisher scan_pub3_;
-
-
-
 
   LaserScanToPointCloud(ros::NodeHandle n) : 
     n_(n),
@@ -107,9 +97,7 @@ public:
     vg.filter (*cloud_filtered);
     //std::cout << "PointCloud after filtering has: " << cloud_filtered->points.size ()  << " data points." << std::endl;
 
-
-
-      // Create the segmentation object for the planar model and set all the parameters
+    // Create the segmentation object for the planar model and set all the parameters
   pcl::SACSegmentation<pcl::PointXYZ> seg;
   pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
   pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
@@ -188,23 +176,15 @@ public:
     scan_pub2_.publish(ptCloudFiltered);
   }
 
-
-  
-
-
     pcl::toROSMsg(*cloud_filtered,ptCloudAux);
 
-
-
     scan_pub3_.publish(ptCloudAux);
-
     scan_pub_.publish(cloud);
     //scan_pub2_.publish(ptCloudFiltered);
 
     // for(int c = 0; c < ptCloudFiltered.data.size(); c++){
     //   cout << "point #" << c << " is: " << ptCloudFiltered << endl;
     // }
-
   }
 };
 
@@ -212,14 +192,11 @@ public:
 
 int main(int argc, char** argv)
 {
-  
   ros::init(argc, argv, "obRec");
   ros::NodeHandle n;
   LaserScanToPointCloud lstopc(n);
 
   spin();
 
-  
   return 0;
-
 }
