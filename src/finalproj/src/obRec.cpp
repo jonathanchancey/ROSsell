@@ -33,6 +33,9 @@
 #include <pcl-1.7/pcl/PointIndices.h>
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <std_msgs/Int16.h>
+
+
 using namespace ros;
 using namespace std;
 
@@ -64,9 +67,9 @@ public:
       boost::bind(&LaserScanToPointCloud::scanCallback, this, _1));
     laser_notifier_.setTolerance(ros::Duration(0.01));
     scan_pub_ = n_.advertise<sensor_msgs::PointCloud>("/my_cloud",1);
-    scan_pub2_ = n_.advertise<sensor_msgs::PointCloud2>("/cloud_Ec",1);
+    scan_pub2_ = n_.advertise<sensor_msgs::PointCloud2>("/cloud_Ec",1);// Ec is the euclidian filter
     scan_pub3_ = n_.advertise<sensor_msgs::PointCloud2>("/cloud_noEc",1);
-    scan_pub4_ = n_.advertise<sensor_msgs::PointCloud>("/fil_cloud",1);
+    scan_pub4_ = n_.advertise<sensor_msgs::PointCloud>("/fil_cloud",1); // filter but as a pointcloud
   }
 
   void scanCallback (const sensor_msgs::LaserScan::ConstPtr& scan_in)
@@ -181,7 +184,12 @@ public:
   }
 };
 
-
+void scanTriggerCallback(const std_msgs::Int16::ConstPtr& msg)
+{
+  ROS_INFO("Received value: %d \t spinnOnce() called",msg->data); // 
+  spinOnce();
+  // ROS_INFO("I heard: [%d]", msg->);
+}
 
 int main(int argc, char** argv)
 {
@@ -189,10 +197,10 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "obRec");
   ros::NodeHandle n;
   LaserScanToPointCloud lstopc(n);
+  ros::Subscriber scan_trigger_sub = n.subscribe("/scanTrigger", 1000, scanTriggerCallback);
 
-  spin();
 
-  
+  // TODO reimplement spin function that spins when told from exploreNode, 
+  // spin();
   return 0;
-
 }
