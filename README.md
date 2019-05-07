@@ -14,4 +14,11 @@ roslaunch husky_gazebo huskyfinal.launch
 ```
 rosrun finalproj exploreNode
 rosrun finalproj obRec
+rosrun rviz rviz
+```
+
+
+#### Print 1 message from topic
+```
+rostopic echo -n1 /my_cloud3
 ```
