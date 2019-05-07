@@ -113,7 +113,7 @@ public:
   seg.setDistanceThreshold (0.01); //0.01 play with me
 
   int i=0, nr_points = (int) cloud_filtered->points.size ();
-  while (cloud_filtered->points.size () > 0.05 * nr_points) //0.3 play with me
+  while (cloud_filtered->points.size () > 0.1 * nr_points) //0.3 play with me
   {
     // Segment the largest planar component from the remaining cloud
     seg.setInputCloud (cloud_filtered);
@@ -147,9 +147,9 @@ public:
 
   std::vector<pcl::PointIndices> cluster_indices;
   pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-  ec.setClusterTolerance (0.02); // 2cm play with me
+  ec.setClusterTolerance (0.01); // 2cm play with me
   ec.setMinClusterSize (1); //play with me
-  ec.setMaxClusterSize (1000); //play with me
+  ec.setMaxClusterSize (200); //play with me
   ec.setSearchMethod (tree);
   ec.setInputCloud (cloud_filtered);
   ec.extract (cluster_indices);
