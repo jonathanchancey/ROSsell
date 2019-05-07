@@ -42,6 +42,7 @@ using namespace std;
 sensor_msgs::PointCloud2 ptCloud;
 sensor_msgs::PointCloud2 ptCloudFiltered;
 sensor_msgs::PointCloud2 ptCloudAux;
+sensor_msgs::PointCloud filteredCloud;
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
 
 
@@ -59,6 +60,8 @@ public:
   ros::Publisher scan_pub_;
   ros::Publisher scan_pub2_;
   ros::Publisher scan_pub3_;
+  ros::Publisher scan_pub4_;
+
 
 
 
@@ -74,6 +77,8 @@ public:
     scan_pub_ = n_.advertise<sensor_msgs::PointCloud>("/my_cloud",1);
     scan_pub2_ = n_.advertise<sensor_msgs::PointCloud2>("/cloud_Ec",1);
     scan_pub3_ = n_.advertise<sensor_msgs::PointCloud2>("/cloud_noEc",1);
+    scan_pub4_ = n_.advertise<sensor_msgs::PointCloud>("/fil_cloud",1);
+
 
 
   }
@@ -183,9 +188,14 @@ public:
    
     ptCloudFiltered.header.frame_id = "base_link";
     ptCloudFiltered.header.stamp = Time::now();
+    //ROS_INFO_STREAM(ptCloudFiltered);
 
 
     scan_pub2_.publish(ptCloudFiltered);
+
+    sensor_msgs::convertPointCloud2ToPointCloud(ptCloudFiltered,filteredCloud);
+
+    scan_pub4_.publish(filteredCloud);
   }
 
 
