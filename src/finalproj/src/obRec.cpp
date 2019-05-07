@@ -39,6 +39,7 @@ using namespace std;
 sensor_msgs::PointCloud2 ptCloud;
 sensor_msgs::PointCloud2 ptCloudFiltered;
 sensor_msgs::PointCloud2 ptCloudAux;
+sensor_msgs::PointCloud filteredCloud;
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
 
 class LaserScanToPointCloud{
@@ -52,6 +53,7 @@ public:
   ros::Publisher scan_pub_;
   ros::Publisher scan_pub2_;
   ros::Publisher scan_pub3_;
+  ros::Publisher scan_pub4_;
 
   LaserScanToPointCloud(ros::NodeHandle n) : 
     n_(n),
@@ -62,8 +64,10 @@ public:
       boost::bind(&LaserScanToPointCloud::scanCallback, this, _1));
     laser_notifier_.setTolerance(ros::Duration(0.01));
     scan_pub_ = n_.advertise<sensor_msgs::PointCloud>("/my_cloud",1);
-    scan_pub2_ = n_.advertise<sensor_msgs::PointCloud2>("/my_cloud2",1);
-    scan_pub3_ = n_.advertise<sensor_msgs::PointCloud2>("/my_cloud3",1);
+    scan_pub2_ = n_.advertise<sensor_msgs::PointCloud2>("/cloud_Ec",1); // Ec is the euclidian filter
+    scan_pub3_ = n_.advertise<sensor_msgs::PointCloud2>("/cloud_noEc",1);
+    scan_pub4_ = n_.advertise<sensor_msgs::PointCloud>("/fil_cloud",1); // filter but as a pointcloud
+
 
 
   }
