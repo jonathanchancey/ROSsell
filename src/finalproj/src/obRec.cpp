@@ -72,8 +72,8 @@ public:
       boost::bind(&LaserScanToPointCloud::scanCallback, this, _1));
     laser_notifier_.setTolerance(ros::Duration(0.01));
     scan_pub_ = n_.advertise<sensor_msgs::PointCloud>("/my_cloud",1);
-    scan_pub2_ = n_.advertise<sensor_msgs::PointCloud2>("/my_cloud2",1);
-    scan_pub3_ = n_.advertise<sensor_msgs::PointCloud2>("/my_cloud3",1);
+    scan_pub2_ = n_.advertise<sensor_msgs::PointCloud2>("/cloud_Ec",1);
+    scan_pub3_ = n_.advertise<sensor_msgs::PointCloud2>("/cloud_noEc",1);
 
 
   }
@@ -121,7 +121,7 @@ public:
   seg.setDistanceThreshold (0.01); //0.01 play with me
 
   int i=0, nr_points = (int) cloud_filtered->points.size ();
-  while (cloud_filtered->points.size () > 0.05 * nr_points) //0.3 play with me
+  while (cloud_filtered->points.size () > 0.1 * nr_points) //0.3 play with me
   {
     // Segment the largest planar component from the remaining cloud
     seg.setInputCloud (cloud_filtered);
@@ -155,9 +155,9 @@ public:
 
   std::vector<pcl::PointIndices> cluster_indices;
   pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-  ec.setClusterTolerance (0.02); // 2cm play with me
+  ec.setClusterTolerance (0.01); // 2cm play with me
   ec.setMinClusterSize (1); //play with me
-  ec.setMaxClusterSize (1000); //play with me
+  ec.setMaxClusterSize (200); //play with me
   ec.setSearchMethod (tree);
   ec.setInputCloud (cloud_filtered);
   ec.extract (cluster_indices);
