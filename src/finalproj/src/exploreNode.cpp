@@ -54,6 +54,9 @@ int main(int argc, char**argv){
                 //spin and scan?
                 goal.target_pose.pose.orientation.w = i;
                 ac.sendGoal(goal);
+                //publishes 0 until new point SUCCEEDED
+                msg.data = 0;
+                scan_trigger.publish(msg);
                 ac.waitForResult(Duration(10));
                 
                 if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)

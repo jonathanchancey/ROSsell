@@ -187,7 +187,7 @@ public:
 void scanTriggerCallback(const std_msgs::Int16::ConstPtr& msg)
 {
   ROS_INFO("Received value: %d \t spinnOnce() called",msg->data); // 
-  spinOnce();
+  // spinOnce();
   // ROS_INFO("I heard: [%d]", msg->);
 }
 
@@ -196,11 +196,12 @@ int main(int argc, char** argv)
   
   ros::init(argc, argv, "obRec");
   ros::NodeHandle n;
+
   LaserScanToPointCloud lstopc(n);
   ros::Subscriber scan_trigger_sub = n.subscribe("/scanTrigger", 1000, scanTriggerCallback);
 
 
   // TODO reimplement spin function that spins when told from exploreNode, 
-  // spin();
+  spin();
   return 0;
 }
