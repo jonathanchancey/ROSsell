@@ -33,11 +33,8 @@
 #include <pcl-1.7/pcl/PointIndices.h>
 #include <pcl_conversions/pcl_conversions.h>
 
-
-
 using namespace ros;
 using namespace std;
-
 
 sensor_msgs::PointCloud2 ptCloud;
 sensor_msgs::PointCloud2 ptCloudFiltered;
@@ -45,13 +42,9 @@ sensor_msgs::PointCloud2 ptCloudAux;
 sensor_msgs::PointCloud filteredCloud;
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
 
-
-
-
 class LaserScanToPointCloud{
 
 public:
-
   ros::NodeHandle n_;
   laser_geometry::LaserProjection projector_;
   tf::TransformListener listener_;
@@ -61,10 +54,6 @@ public:
   ros::Publisher scan_pub2_;
   ros::Publisher scan_pub3_;
   ros::Publisher scan_pub4_;
-
-
-
-
 
   LaserScanToPointCloud(ros::NodeHandle n) : 
     n_(n),
@@ -78,9 +67,6 @@ public:
     scan_pub2_ = n_.advertise<sensor_msgs::PointCloud2>("/cloud_Ec",1);
     scan_pub3_ = n_.advertise<sensor_msgs::PointCloud2>("/cloud_noEc",1);
     scan_pub4_ = n_.advertise<sensor_msgs::PointCloud>("/fil_cloud",1);
-
-
-
   }
 
   void scanCallback (const sensor_msgs::LaserScan::ConstPtr& scan_in)
@@ -106,115 +92,92 @@ public:
     pcl::fromROSMsg(ptCloud,*pclCloud);
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
 
-
     vg.setInputCloud (pclCloud);
     vg.setLeafSize (0.03f, 0.03f, 0.03f); //originally .01
     vg.filter (*cloud_filtered);
     //std::cout << "PointCloud after filtering has: " << cloud_filtered->points.size ()  << " data points." << std::endl;
 
+    // Create the segmentation object for the planar model and set all the parameters
+    pcl::SACSegmentation<pcl::PointXYZ> seg;
+    pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
+    pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_plane (new pcl::PointCloud<pcl::PointXYZ> ());
+    seg.setOptimizeCoefficients (true); //true
+    seg.setModelType (pcl::SACMODEL_LINE);
+    seg.setMethodType (pcl::SAC_RANSAC);
+    seg.setMaxIterations (100);
+    seg.setDistanceThreshold (0.01); //0.01 play with me
 
-
-      // Create the segmentation object for the planar model and set all the parameters
-  pcl::SACSegmentation<pcl::PointXYZ> seg;
-  pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
-  pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_plane (new pcl::PointCloud<pcl::PointXYZ> ());
-  seg.setOptimizeCoefficients (true); //true
-  seg.setModelType (pcl::SACMODEL_LINE);
-  seg.setMethodType (pcl::SAC_RANSAC);
-  seg.setMaxIterations (100);
-  seg.setDistanceThreshold (0.01); //0.01 play with me
-
-  int i=0, nr_points = (int) cloud_filtered->points.size ();
-  while (cloud_filtered->points.size () > 0.1 * nr_points) //0.3 play with me
-  {
-    // Segment the largest planar component from the remaining cloud
-    seg.setInputCloud (cloud_filtered);
-    seg.segment (*inliers, *coefficients);
-    if (inliers->indices.size () == 0)
+    int i=0, nr_points = (int) cloud_filtered->points.size ();
+    while (cloud_filtered->points.size () > 0.1 * nr_points) //0.3 play with me
     {
-      //std::cout << "Could not estimate a planar model for the given dataset." << std::endl;
-      break;
+      // Segment the largest planar component from the remaining cloud
+      seg.setInputCloud (cloud_filtered);
+      seg.segment (*inliers, *coefficients);
+      if (inliers->indices.size () == 0)
+      {
+        //std::cout << "Could not estimate a planar model for the given dataset." << std::endl;
+        break;
+      }
+
+      // Extract the planar inliers from the input cloud
+      pcl::ExtractIndices<pcl::PointXYZ> extract;
+      extract.setInputCloud (cloud_filtered);
+      extract.setIndices (inliers);
+      extract.setNegative (false);
+      
+      // Get the points associated with the linear surface
+      extract.filter (*cloud_plane);
+      //std::cout << "PointCloud representing the linear component: " << cloud_plane->points.size () << " data points." << std::endl;
+
+      // Remove the linear inliers, extract the rest
+      extract.setNegative (true);
+      extract.filter (*cloud_f);
+      *cloud_filtered = *cloud_f;
     }
 
-    // Extract the planar inliers from the input cloud
-    pcl::ExtractIndices<pcl::PointXYZ> extract;
-    extract.setInputCloud (cloud_filtered);
-    extract.setIndices (inliers);
-    extract.setNegative (false);
-    
+    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
+    tree->setInputCloud (cloud_filtered);
 
-    // Get the points associated with the linear surface
-    extract.filter (*cloud_plane);
-    //std::cout << "PointCloud representing the linear component: " << cloud_plane->points.size () << " data points." << std::endl;
+    std::vector<pcl::PointIndices> cluster_indices;
+    pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
+    ec.setClusterTolerance (0.01); // 2cm play with me
+    ec.setMinClusterSize (1); //play with me
+    ec.setMaxClusterSize (200); //play with me
+    ec.setSearchMethod (tree);
+    ec.setInputCloud (cloud_filtered);
+    ec.extract (cluster_indices);
 
-    // Remove the linear inliers, extract the rest
-    extract.setNegative (true);
-    extract.filter (*cloud_f);
-    *cloud_filtered = *cloud_f;
-  }
-  
+    for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
+    {
+      for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
+      cloud_cluster->points.push_back (cloud_filtered->points[*pit]); //*
+      cloud_cluster->width = cloud_cluster->points.size ();
+      cloud_cluster->height = 1;
+      cloud_cluster->is_dense = true;
+      //pcl_conversions::toPCL(Time::now(),cloud_cluster->header.stamp);
+      //std::cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
 
-  pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
-  tree->setInputCloud (cloud_filtered);
+      pcl::toROSMsg(*cloud_cluster,ptCloudFiltered);
 
-  std::vector<pcl::PointIndices> cluster_indices;
-  pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-  ec.setClusterTolerance (0.01); // 2cm play with me
-  ec.setMinClusterSize (1); //play with me
-  ec.setMaxClusterSize (200); //play with me
-  ec.setSearchMethod (tree);
-  ec.setInputCloud (cloud_filtered);
-  ec.extract (cluster_indices);
+      ptCloudFiltered.header.frame_id = "base_link";
+      ptCloudFiltered.header.stamp = Time::now();
+      //ROS_INFO_STREAM(ptCloudFiltered);
 
+      scan_pub2_.publish(ptCloudFiltered);
 
-  
+      sensor_msgs::convertPointCloud2ToPointCloud(ptCloudFiltered,filteredCloud);
 
-  for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
-  {
-    for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
-    cloud_cluster->points.push_back (cloud_filtered->points[*pit]); //*
-    cloud_cluster->width = cloud_cluster->points.size ();
-    cloud_cluster->height = 1;
-    cloud_cluster->is_dense = true;
-    //pcl_conversions::toPCL(Time::now(),cloud_cluster->header.stamp);
-
-
-
-    //std::cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
-
-    pcl::toROSMsg(*cloud_cluster,ptCloudFiltered);
-
-   
-    ptCloudFiltered.header.frame_id = "base_link";
-    ptCloudFiltered.header.stamp = Time::now();
-    //ROS_INFO_STREAM(ptCloudFiltered);
-
-
-    scan_pub2_.publish(ptCloudFiltered);
-
-    sensor_msgs::convertPointCloud2ToPointCloud(ptCloudFiltered,filteredCloud);
-
-    scan_pub4_.publish(filteredCloud);
-  }
-
-
-  
-
-
+      scan_pub4_.publish(filteredCloud);
+    }
     pcl::toROSMsg(*cloud_filtered,ptCloudAux);
-
-
-
     scan_pub3_.publish(ptCloudAux);
-
     scan_pub_.publish(cloud);
     //scan_pub2_.publish(ptCloudFiltered);
 
     // for(int c = 0; c < ptCloudFiltered.data.size(); c++){
     //   cout << "point #" << c << " is: " << ptCloudFiltered << endl;
     // }
-
   }
 };
 

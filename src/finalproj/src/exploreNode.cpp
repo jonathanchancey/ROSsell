@@ -35,7 +35,7 @@ int main(int argc, char**argv){
     Rate rate(1);
 
 
-
+// fire on on signal from exploreNode, less walking on exploreNOde. It does random and then it turns a direction and then it scans, it turns north scans, west ,scans, south, scans, and then it can move again. 
     while(ok()){
         Duration(2).sleep();
         goal.target_pose.pose.position.x = rand() % 9 + -9;
