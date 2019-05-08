@@ -1,24 +1,3 @@
-#include "ros/ros.h"
-#include "tf/transform_listener.h"
-#include "sensor_msgs/PointCloud.h"
-#include "tf/message_filter.h"
-#include "message_filters/subscriber.h"
-#include "laser_geometry/laser_geometry.h"
-#include "geometry_msgs/Point32.h"
-#include <sensor_msgs/point_cloud_conversion.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl-1.7/pcl/point_cloud.h>
-#include <pcl-1.7/pcl/kdtree/kdtree.h>
-#include <pcl-1.7/pcl/common/common.h>
-#include <pcl-1.7/pcl/common/projection_matrix.h>
-#include <pcl-1.7/pcl/impl/point_types.hpp>
-#include <pcl-1.7/pcl/ModelCoefficients.h>
-#include <pcl-1.7/pcl/PolygonMesh.h>
-#include <pcl-1.7/pcl/io/pcd_io.h>
-#include <pcl-1.7/pcl/io/point_cloud_image_extractors.h>
-#include <pcl-1.7/pcl/point_types.h>
-#include <pcl/filters/voxel_grid.h>
 #include <pcl/ModelCoefficients.h>
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
@@ -30,22 +9,31 @@
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
-#include <pcl-1.7/pcl/PointIndices.h>
+#include "ros/ros.h"
+#include "tf/transform_listener.h"
+#include "sensor_msgs/PointCloud.h"
+#include "tf/message_filter.h"
+#include "message_filters/subscriber.h"
+#include "laser_geometry/laser_geometry.h"
+#include "geometry_msgs/Point32.h"
+#include <sensor_msgs/point_cloud_conversion.h>
+#include <sensor_msgs/PointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
-
-
-
-using namespace ros;
-using namespace std;
+#include <pcl-1.7/pcl/point_cloud.h>
+#include <pcl-1.7/pcl/segmentation/extract_clusters.h>
+#include <pcl-1.7/pcl/kdtree/kdtree.h>
+#include <pcl-1.7/pcl/common/common.h>
+#include <pcl-1.7/pcl/common/projection_matrix.h>
+#include <pcl-1.7/pcl/impl/point_types.hpp>
+#include <pcl-1.7/pcl/ModelCoefficients.h>
+#include <pcl-1.7/pcl/PolygonMesh.h>
+#include <pcl-1.7/pcl/io/pcd_io.h>
+#include <pcl-1.7/pcl/io/point_cloud_image_extractors.h>
+#include <pcl-1.7/pcl/point_types.h>
 
 
 sensor_msgs::PointCloud2 ptCloud;
-sensor_msgs::PointCloud2 ptCloudFiltered;
-sensor_msgs::PointCloud2 ptCloudAux;
-sensor_msgs::PointCloud filteredCloud;
-pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
-
-
+pcl::PointCloud<pcl::PointXYZ> pclCloud;
 
 
 class LaserScanToPointCloud{
@@ -59,10 +47,6 @@ public:
   tf::MessageFilter<sensor_msgs::LaserScan> laser_notifier_;
   ros::Publisher scan_pub_;
   ros::Publisher scan_pub2_;
-  ros::Publisher scan_pub3_;
-  ros::Publisher scan_pub4_;
-
-
 
 
 
@@ -75,65 +59,64 @@ public:
       boost::bind(&LaserScanToPointCloud::scanCallback, this, _1));
     laser_notifier_.setTolerance(ros::Duration(0.01));
     scan_pub_ = n_.advertise<sensor_msgs::PointCloud>("/my_cloud",1);
-    scan_pub2_ = n_.advertise<sensor_msgs::PointCloud2>("/cloud_Ec",1);
-    scan_pub3_ = n_.advertise<sensor_msgs::PointCloud2>("/cloud_noEc",1);
-    scan_pub4_ = n_.advertise<sensor_msgs::PointCloud>("/fil_cloud",1);
-
-
+      scan_pub2_ = n_.advertise<sensor_msgs::PointCloud2>("/my_cloud2",1);
 
   }
 
   void scanCallback (const sensor_msgs::LaserScan::ConstPtr& scan_in)
   {
-    sensor_msgs::PointCloud cloud;
+    sensor_msgs::PointCloud cloud1;
     try
     {
         projector_.transformLaserScanToPointCloud(
-          "base_link",*scan_in, cloud,listener_);
+          "base_link",*scan_in, cloud1,listener_);
     }
     catch (tf::TransformException& e)
     {
-        //std::cout << e.what();
+        std::cout << e.what();
         return;
     }
     
     // Do something with cloud.
-    sensor_msgs::convertPointCloudToPointCloud2(cloud, ptCloud);
+    sensor_msgs::convertPointCloudToPointCloud2(cloud1, ptCloud);
+    //pcl::fromROSMsg(ptCloud,pclCloud);
     //pcl::extractEuclideanClusters ec();
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>), cloud_f (new pcl::PointCloud<pcl::PointXYZ>);
 
-    pcl::VoxelGrid<pcl::PointXYZ> vg;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr pclCloud (new pcl::PointCloud<pcl::PointXYZ>), cloud_f (new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::fromROSMsg(ptCloud,*pclCloud);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::fromROSMsg(ptCloud,*cloud);
 
+  
+  std::cout << "PointCloud before filtering has: " << cloud->points.size () << " data points." << std::endl; //*
 
-    vg.setInputCloud (pclCloud);
-    vg.setLeafSize (0.03f, 0.03f, 0.03f); //originally .01
-    vg.filter (*cloud_filtered);
-    //std::cout << "PointCloud after filtering has: " << cloud_filtered->points.size ()  << " data points." << std::endl;
+  // Create the filtering object: downsample the dataset using a leaf size of 1cm
+  pcl::VoxelGrid<pcl::PointXYZ> vg;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
+  vg.setInputCloud (cloud);
+  vg.setLeafSize (0.01f, 0.01f, 0.01f);
+  vg.filter (*cloud_filtered);
+  std::cout << "PointCloud after filtering has: " << cloud_filtered->points.size ()  << " data points." << std::endl; //*
 
-
-
-      // Create the segmentation object for the planar model and set all the parameters
+  // Create the segmentation object for the planar model and set all the parameters
   pcl::SACSegmentation<pcl::PointXYZ> seg;
   pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
   pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_plane (new pcl::PointCloud<pcl::PointXYZ> ());
-  seg.setOptimizeCoefficients (true); //true
-  seg.setModelType (pcl::SACMODEL_LINE);
+  pcl::PCDWriter writer;
+  seg.setOptimizeCoefficients (true);
+  seg.setModelType (pcl::SACMODEL_PLANE);
   seg.setMethodType (pcl::SAC_RANSAC);
   seg.setMaxIterations (100);
-  seg.setDistanceThreshold (0.01); //0.01 play with me
+  seg.setDistanceThreshold (0.02);
 
   int i=0, nr_points = (int) cloud_filtered->points.size ();
-  while (cloud_filtered->points.size () > 0.1 * nr_points) //0.3 play with me
+  while (cloud_filtered->points.size () > 0.3 * nr_points)
   {
     // Segment the largest planar component from the remaining cloud
     seg.setInputCloud (cloud_filtered);
     seg.segment (*inliers, *coefficients);
     if (inliers->indices.size () == 0)
     {
-      //std::cout << "Could not estimate a planar model for the given dataset." << std::endl;
+      std::cout << "Could not estimate a planar model for the given dataset." << std::endl;
       break;
     }
 
@@ -142,74 +125,69 @@ public:
     extract.setInputCloud (cloud_filtered);
     extract.setIndices (inliers);
     extract.setNegative (false);
-    
 
-    // Get the points associated with the linear surface
+    // Get the points associated with the planar surface
     extract.filter (*cloud_plane);
-    //std::cout << "PointCloud representing the linear component: " << cloud_plane->points.size () << " data points." << std::endl;
+    std::cout << "PointCloud representing the planar component: " << cloud_plane->points.size () << " data points." << std::endl;
 
-    // Remove the linear inliers, extract the rest
+    // Remove the planar inliers, extract the rest
     extract.setNegative (true);
     extract.filter (*cloud_f);
     *cloud_filtered = *cloud_f;
   }
-  
 
+  // Creating the KdTree object for the search method of the extraction
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
   tree->setInputCloud (cloud_filtered);
 
   std::vector<pcl::PointIndices> cluster_indices;
   pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-  ec.setClusterTolerance (0.01); // 2cm play with me
-  ec.setMinClusterSize (1); //play with me
-  ec.setMaxClusterSize (200); //play with me
+  ec.setClusterTolerance (0.02); // 2cm
+  ec.setMinClusterSize (100);
+  ec.setMaxClusterSize (25000);
   ec.setSearchMethod (tree);
   ec.setInputCloud (cloud_filtered);
   ec.extract (cluster_indices);
 
-
-  
-
+  int j = 0;
   for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
   {
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
     for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
-    cloud_cluster->points.push_back (cloud_filtered->points[*pit]); //*
+      cloud_cluster->points.push_back (cloud_filtered->points[*pit]); //*
     cloud_cluster->width = cloud_cluster->points.size ();
     cloud_cluster->height = 1;
     cloud_cluster->is_dense = true;
-    pcl::toROSMsg(*cloud_cluster,ptCloudFiltered);
 
-   
-    ptCloudFiltered.header.frame_id = "base_link";
-    ptCloudFiltered.header.stamp = Time::now();
-
-    scan_pub2_.publish(ptCloudFiltered);
-
-    sensor_msgs::convertPointCloud2ToPointCloud(ptCloudFiltered,filteredCloud);
-
-    scan_pub4_.publish(filteredCloud);
+    std::cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
+    std::stringstream ss;
+    ss << "cloud_cluster_" << j << ".pcd";
+    writer.write<pcl::PointXYZ> (ss.str (), *cloud_cluster, false); //*
+    j++;
   }
 
-    pcl::toROSMsg(*cloud_filtered,ptCloudAux);
-    scan_pub3_.publish(ptCloudAux);
 
-    scan_pub_.publish(cloud);
+
+
+    scan_pub_.publish(cloud1);
+    scan_pub2_.publish(ptCloud);
 
   }
 };
 
 
-
-int main(int argc, char** argv)
+int 
+main (int argc, char** argv)
 {
-  
-  ros::init(argc, argv, "obRec");
-  ros::NodeHandle n;
-  LaserScanToPointCloud lstopc(n);
+  // Read in the cloud data
+    ros::init(argc, argv, "testNode");
 
-  spin();
+    ros::NodeHandle n;
 
-  
-  return 0;
+    LaserScanToPointCloud lstopc(n);
 
+    ros::spin();
+
+
+  return (0);
 }
