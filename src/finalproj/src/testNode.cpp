@@ -9,19 +9,23 @@
 
 using namespace ros;
 using namespace std;
-int j = 0;
+int k = 0;
 
 void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
-  for(int c = 0; c < msg->info.height*msg->info.width; c++){
-    if((int)msg->data[c] != -1 && (int)msg->data[c] != 100){
-      ROS_INFO_STREAM((int)msg->data.at(c));
-      j++;
-
+  int Map[msg->info.height][msg->info.width];
+  for(int i = 0; i < msg->info.width; i++){
+    for(int j = 0; j < msg->info.height; j++){
+      Map[j][i] = (int)msg->data[j*msg->info.width+i];
+        k++;
     }
-    
   }
-  ROS_INFO_STREAM(j);
-
+  for(int i = 0; i < msg->info.width; i++){
+    for(int j = 0; j < msg->info.height; j++){
+      if(Map[i][j] != -1 && Map[i][j] != 100){
+        ROS_INFO_STREAM("(" << i << "," << j << "):" << Map[i][j]);
+      }
+    }
+  }
 }
 
 int main (int argc, char** argv){
