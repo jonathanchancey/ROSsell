@@ -10,11 +10,21 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <std_msgs/Int16.h>
+#include <random>
 
 using namespace ros;
 
 std_msgs::Int16 msg;
 
+int trueRandom(){
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_int_distribution<> dist(1,100);
+    return dist(mt);
+
+
+    
+}
 
 int main(int argc, char**argv){
     init(argc,argv,"exploreNode");
@@ -35,12 +45,14 @@ int main(int argc, char**argv){
 
     Rate rate(1);
 
+   
+
     // fire on on signal from exploreNode, less walking on exploreNOde. It does random and then it turns a direction and then it scans, it turns north scans, west ,scans, south, scans, and then it can move again. 
     while(ok()){
         Duration(2).sleep();
         
-        goal.target_pose.pose.position.x = rand() % 9 + -9;
-        goal.target_pose.pose.position.y = rand() % 9 + -9;
+        goal.target_pose.pose.position.x = trueRandom() % 9 + -9;
+        goal.target_pose.pose.position.y = trueRandom() % 9 + -9;
 
         ROS_INFO_STREAM(goal);
         ac.sendGoal(goal);
