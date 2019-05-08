@@ -173,32 +173,31 @@ public:
       addClusterFlag = false;
       for (std::vector<int>::const_iterator pit = cluster_indices.end()->indices.begin (); pit != cluster_indices.end()->indices.end (); ++pit)
           cloud_cluster->points.push_back (cloud_filtered->points[*pit]); //*
+          cloud_cluster->width = cloud_cluster->points.size ();
+          cloud_cluster->height = 1;
+          cloud_cluster->is_dense = true;
+          //pcl_conversions::toPCL(Time::now(),cloud_cluster->header.stamp);
+          //std::cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
+
+          pcl::toROSMsg(*cloud_cluster,ptCloudFiltered);
+
+          ptCloudFiltered.header.frame_id = "base_link";
+          ptCloudFiltered.header.stamp = Time::now();
+          //ROS_INFO_STREAM(ptCloudFiltered);
+
+          scan_pub2_.publish(ptCloudFiltered);
+
+          sensor_msgs::convertPointCloud2ToPointCloud(ptCloudFiltered,filteredCloud);
+
+          scan_pub4_.publish(filteredCloud);
     }
     // for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
     // {
     //   for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
     //     cloud_cluster->points.push_back (cloud_filtered->points[*pit]); //*
       
-      cloud_cluster->width = cloud_cluster->points.size ();
-      cloud_cluster->height = 1;
-      cloud_cluster->is_dense = true;
-      //pcl_conversions::toPCL(Time::now(),cloud_cluster->header.stamp);
-      //std::cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
 
-      pcl::toROSMsg(*cloud_cluster,ptCloudFiltered);
-
-      ptCloudFiltered.header.frame_id = "base_link";
-      ptCloudFiltered.header.stamp = Time::now();
-      //ROS_INFO_STREAM(ptCloudFiltered);
-
-      scan_pub2_.publish(ptCloudFiltered);
-
-      sensor_msgs::convertPointCloud2ToPointCloud(ptCloudFiltered,filteredCloud);
-
-      scan_pub4_.publish(filteredCloud);
     // }
-
-
 
     pcl::toROSMsg(*cloud_filtered,ptCloudAux);
     scan_pub3_.publish(ptCloudAux);
@@ -211,12 +210,15 @@ public:
   }
 };
 
-// void scanTriggerCallback(const std_msgs::Int16::ConstPtr& msg)
-// {
-//   ROS_INFO("Received value: %d \t spinnOnce() called",msg->data); // 
-//   // spinOnce();
-//   // ROS_INFO("I heard: [%d]", msg->);
-// }
+
+
+void scanTriggerCallback(const std_msgs::Int16::ConstPtr& msg)
+{
+  // ROS_INFO("Received value: %d \t spinnOnce() called",msg->data); // 
+  addClusterFlag = true;
+  // spinOnce();
+  // ROS_INFO("I heard: [%d]", msg->);
+}
 
 int main(int argc, char** argv)
 {
@@ -225,7 +227,7 @@ int main(int argc, char** argv)
   ros::NodeHandle n;
 
   LaserScanToPointCloud lstopc(n);
-  // ros::Subscriber scan_trigger_sub = n.subscribe("/scanTrigger", 1000, scanTriggerCallback);
+  ros::Subscriber scan_trigger_sub = n.subscribe("/scanTrigger", 1000, scanTriggerCallback);
 
 
   // TODO reimplement spin function that spins when told from exploreNode, 
