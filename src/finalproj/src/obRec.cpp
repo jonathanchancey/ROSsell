@@ -34,6 +34,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 
 #include <std_msgs/Int16.h>
+#include "move_base_msgs/MoveBaseAction.h"
 
 
 using namespace ros;
@@ -44,6 +45,18 @@ sensor_msgs::PointCloud2 ptCloudFiltered;
 sensor_msgs::PointCloud2 ptCloudAux;
 sensor_msgs::PointCloud filteredCloud;
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
+bool addClusterFlag = false;
+
+// SEGFAULT
+// void scanTriggerCallback(const move_base_msgs::MoveBaseActionGoal::ConstPtr&)
+// {
+//   // ROS_INFO("Received value: %f \t spinnOnce() called",msg.goal.target_pose.pose.position.x); // 
+//   ROS_INFO("We got a MoveBaseActionGoal, sound the alarms!");
+//   addClusterFlag = true;
+//   // spinOnce();
+//   // ROS_INFO("I heard: [%d]", msg->);
+// }
+
 
 class LaserScanToPointCloud{
 
@@ -57,6 +70,9 @@ public:
   ros::Publisher scan_pub2_;
   ros::Publisher scan_pub3_;
   ros::Publisher scan_pub4_;
+// SEGFAULT
+  // ros::Subscriber scan_trigger_sub = n_.subscribe("/move_base/goal", 1000, scanTriggerCallback);
+
 
   LaserScanToPointCloud(ros::NodeHandle n) : 
     n_(n),
@@ -150,11 +166,19 @@ public:
     ec.setSearchMethod (tree);
     ec.setInputCloud (cloud_filtered);
     ec.extract (cluster_indices);
-
-    for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
-    {
-      for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
-      cloud_cluster->points.push_back (cloud_filtered->points[*pit]); //*
+    if (addClusterFlag)
+      printf("Right before vector shenangins");
+    if (addClusterFlag){
+      // replaced iterating throuh all clusterindices with the end.
+      addClusterFlag = false;
+      for (std::vector<int>::const_iterator pit = cluster_indices.end()->indices.begin (); pit != cluster_indices.end()->indices.end (); ++pit)
+          cloud_cluster->points.push_back (cloud_filtered->points[*pit]); //*
+    }
+    // for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
+    // {
+    //   for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
+    //     cloud_cluster->points.push_back (cloud_filtered->points[*pit]); //*
+      
       cloud_cluster->width = cloud_cluster->points.size ();
       cloud_cluster->height = 1;
       cloud_cluster->is_dense = true;
@@ -172,7 +196,10 @@ public:
       sensor_msgs::convertPointCloud2ToPointCloud(ptCloudFiltered,filteredCloud);
 
       scan_pub4_.publish(filteredCloud);
-    }
+    // }
+
+
+
     pcl::toROSMsg(*cloud_filtered,ptCloudAux);
     scan_pub3_.publish(ptCloudAux);
     scan_pub_.publish(cloud);
@@ -184,12 +211,12 @@ public:
   }
 };
 
-void scanTriggerCallback(const std_msgs::Int16::ConstPtr& msg)
-{
-  ROS_INFO("Received value: %d \t spinnOnce() called",msg->data); // 
-  // spinOnce();
-  // ROS_INFO("I heard: [%d]", msg->);
-}
+// void scanTriggerCallback(const std_msgs::Int16::ConstPtr& msg)
+// {
+//   ROS_INFO("Received value: %d \t spinnOnce() called",msg->data); // 
+//   // spinOnce();
+//   // ROS_INFO("I heard: [%d]", msg->);
+// }
 
 int main(int argc, char** argv)
 {
@@ -198,10 +225,11 @@ int main(int argc, char** argv)
   ros::NodeHandle n;
 
   LaserScanToPointCloud lstopc(n);
-  ros::Subscriber scan_trigger_sub = n.subscribe("/scanTrigger", 1000, scanTriggerCallback);
+  // ros::Subscriber scan_trigger_sub = n.subscribe("/scanTrigger", 1000, scanTriggerCallback);
 
 
   // TODO reimplement spin function that spins when told from exploreNode, 
+  // TODO belay that
   spin();
   return 0;
 }
