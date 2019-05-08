@@ -5,18 +5,24 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Quaternion.h>
+#include <vector>
 
 
 using namespace ros;
 using namespace std;
 int k = 0;
+vector<double> X;
+vector<double> Y;
 
 void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
+
+
+
   for(int width = 0; width < msg->info.width; ++width){
     for(int height = 0; height < msg->info.height; ++ height){
       if(msg->data[height*msg->info.width+width] > 0){
-        cout << "x: " << width * msg->info.resolution+msg->info.resolution/2 -20<< " ";
-        cout << "y: " << height * msg->info.resolution + msg->info.resolution/2 -20<< endl;;
+        X.push_back(width * msg->info.resolution+msg->info.resolution/2 -20);
+        Y.push_back(height * msg->info.resolution + msg->info.resolution/2 -20);
       }
     }
   }
