@@ -32,7 +32,7 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl-1.7/pcl/PointIndices.h>
 #include <pcl_conversions/pcl_conversions.h>
-
+#include <pcl_ros/transforms.h>
 
 
 using namespace ros;
@@ -62,6 +62,7 @@ public:
   ros::Publisher scan_pub3_;
   ros::Publisher scan_pub4_;
 
+  // tf::TransformListener listener_;/
 
 
 
@@ -185,7 +186,15 @@ public:
 
     scan_pub2_.publish(ptCloudFiltered);
 
-    sensor_msgs::convertPointCloud2ToPointCloud(ptCloudFiltered,filteredCloud);
+
+    // TODO print content
+    ROS_INFO_STREAM("ptCloudFiltered.data" << ptCloudFiltered.height);
+    // TODO make new ptCloud for output
+    pcl_ros::transformPointCloud("map", ptCloudFiltered, ptCloudFiltered, listener_);
+     
+
+    sensor_msgs::convertPointCloud2ToPointCloud(ptCloudFiltered,filteredCloud); 
+    // ran through eu filter, pcl to pointcloud2 to pointcloud1
 
     scan_pub4_.publish(filteredCloud);
   }
