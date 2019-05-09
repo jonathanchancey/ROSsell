@@ -49,14 +49,15 @@ int main (int argc, char** argv){
     ros::Subscriber sub = nh.subscribe ("/cloud_Ec", 1, cloud_callback);
 
     // Create a ROS publisher for the output point cloud
-    pub = nh.advertise<sensor_msgs::PointCloud2> ("/point_cloud/cloud_transformed", 1);
+    pub = nh.advertise<sensor_msgs::PointCloud2> ("/coruCloud", 1);
 
     tf::TransformListener listener;
     ros::Rate rate(30.0);
     while (nh.ok()){
 
         try{
-            listener.lookupTransform("map", "base_link", ros::Time(), transform);
+            listener.lookupTransform("map", "base_link", ros::Time(0), transform);
+            ROS_INFO("We did it reddit");
         }
         catch (tf::TransformException ex){
             ROS_ERROR("%s",ex.what());
