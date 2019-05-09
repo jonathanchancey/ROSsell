@@ -16,6 +16,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/filters/extract_indices.h>
 #include <vector>
+#include <algorithm>
 // #include <map>
 // #include <iterator> 
 
@@ -45,6 +46,27 @@ void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
         Y.push_back(height * msg->info.resolution + msg->info.resolution/2 -20);
       }
     }
+  }
+}
+
+struct compare
+{
+	double key;
+	compare(double const &i): key(i) { }
+
+	bool operator()(double const &i)
+	{
+		return (i == key);
+	}
+};
+
+bool inRange(double low, double high, double x) 
+{ 
+  if((x-low) <= (high-low)){
+    return true;
+  }
+  else{
+    return false;
   }
 }
 
@@ -93,9 +115,13 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
                 
                 // return check;
                 if (check){
+                  /*
+                  
                     ROS_INFO("Found point that succeeds with x @ %f,%f",x2,y2);
                     ROS_INFO("Derived from original x @ %f,%f",x,y);
                     ROS_INFO_STREAM("WE FOUND BOTH POINTS, THAT'S A TABLE");
+                    */
+                    
                 }
             }
         }
@@ -106,9 +132,12 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
 
 
 bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
-    double thresholdWidth  = 0.2;
-    double thresholdLength = 0.2;
-    
+        // input x y is suspected table leg
+    // searches all other points in cloud 
+    // attempts to find table
+    double thresholdWidth  = 0.51;
+    double thresholdLength = 0.53;
+
     double x2 = 0;
     double y2 = 0;
 
@@ -117,10 +146,30 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
 
     double xAligndiff = 0;
     double yAligndiff = 0;
-    double acceptablePointError = .2; // accounts for cloud distribution
-    for(int i = 0;i < pt->points.size();i++){
+
+    // ROS_INFO_STREAM("tableMaybe called");
+
+    double acceptablePointError = .02; // accounts for cloud distribution
+    for(int i  = 0; i < pt->points.size(); i++){
         x2 = pt->points[i].x;
         y2 = pt->points[i].y;
+
+        xdiff = fabs(x-x2);
+        ydiff = fabs(y-y2);
+        //ROS_INFO_STREAM(xdiff);
+        //ROS_INFO_STREAM(ydiff);
+        // if(inRange(thresholdWidth - acceptablePointError, thresholdWidth + acceptablePointError, xdiff)){
+        //   if(inRange(thresholdLength - acceptablePointError, thresholdLength + acceptablePointError, ydiff)){
+        if(xdiff > thresholdWidth - acceptablePointError && xdiff < thresholdWidth + acceptablePointError){
+          if(ydiff > thresholdLength - acceptablePointError && ydiff < thresholdLength + acceptablePointError){
+            if(!(find(X.begin(), X.end(), x2) != X.end())){
+              if(!(find(Y.begin(), Y.end(), y2) != Y.end())){
+              ROS_INFO_STREAM("Mailbox at (" << x2 << "," << y2 << ")");
+              }
+            }
+        }
+
+    }
     }
 }
 
@@ -261,9 +310,11 @@ public:
     // }
 
     cloud_filtered->points[0].x;
-    for (int i = 0; i < cloud_filtered->points.size();i++){
-        ROS_INFO("cloud_filtered->points[%d/%d].xy = %f,%f",i ,cloud_filtered->points.size(), cloud_filtered->points[i].x,cloud_filtered->points[i].y);
-        tableMaybe(cloud_filtered->points[i].x, cloud_filtered->points[i].y,&filteredCloud);// TODO may need to change filteredCloud
+    for (int i = 0; i < filteredCloud.points.size();i++){
+        //ROS_INFO("cloud_filtered->points[%d/%d].xy = %f,%f",i ,cloud_filtered->points.size(), cloud_filtered->points[i].x,cloud_filtered->points[i].y);
+        tableMaybe(filteredCloud.points[i].x, filteredCloud.points[i].y,&filteredCloud);// TODO may need to change filteredCloud
+        maybeMailbox(filteredCloud.points[i].x, filteredCloud.points[i].y,&filteredCloud);// TODO may need to change filteredCloud
+
     }
     // tableMaybe(-8.0,-2.0,&cloud_filtered);
 
@@ -282,12 +333,6 @@ int main(int argc, char** argv){
   LaserScanToPointCloud lstopc(n);
   Subscriber mapSub = n.subscribe("map", 1000, mapConvert);
   
-//   while(ok()){
-//         Duration(2).sleep();
-
-
-//         spinOnce();
-//     }
 
   spin();
 
