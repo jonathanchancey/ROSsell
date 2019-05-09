@@ -90,6 +90,8 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
             // ROS_INFO("Found point that aligns with y @ %f",x2);
             if (xdiff < acceptablePointError){
                 ROS_INFO("Found point that succeeds with x @ %f,%f",x2,y2);
+                ROS_INFO("Derived from original x @ %f,%f",x,y);
+
                 return check;
             }
         }
