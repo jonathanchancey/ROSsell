@@ -53,6 +53,14 @@ struct MailBoxes{
 vector<Tables> tablesVec;
 vector<MailBoxes> mailBoxVec;
 
+void amclReceived(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg){
+
+    currX = msg->pose.pose.position.x;
+    currY = msg->pose.pose.position.y;
+    currTheta = msg->pose.pose.orientation.w;
+
+
+}
 
 
 void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
@@ -66,14 +74,7 @@ void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
   }
 }
 
-// void amclReceived(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg){
 
-//     currX = msg->pose.pose.position.x;
-//     currY = msg->pose.pose.position.y;
-//     currTheta = msg->pose.pose.orientation.w;
-
-
-// }
 
 struct compare
 {
@@ -115,6 +116,9 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
     double xMidpoint = 0;
     double yMidpoint = 0;
 
+    double xMidpointDiff = 0;
+    double yMidpointDiff = 0;
+
     // ROS_INFO_STREAM("tableMaybe called");
 
     double acceptablePointError = .02; // accounts for cloud distribution
@@ -140,24 +144,24 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
               // save in intervals of .5 coordinates?
               // remove entries that are within 1 coord away?
               ROS_INFO_STREAM("Table at (" << x2 << "," << y2 << ")");
-              ROS_INFO_STREAM("Calculated midoint at " << xmidpoint << "," << ymidpoint);
+              ROS_INFO_STREAM("Calculated midoint at " << xMidpoint << "," << yMidpoint);
               //TODO maybe needs to be shifted so center is output 
 
                 //if(none_of(tablesVec.begin(),tablesVec.end(),this.x = placeholders::_1xMidpoint ))
                
                 for(int i = 0;i<tablesVec.size();i++){
 
-                xMidpointDiff = fabs(xMidpoint-tableVec[i]->midX);
-                yMidpointDiff = fabs(yMidpoint-tableVec[i]->midY);
+                xMidpointDiff = fabs(xMidpoint-tablesVec[i].midX);
+                yMidpointDiff = fabs(yMidpoint-tablesVec[i].midY);
 
                   if(xMidpointDiff < acceptableCenterError){
                     break;
                   }
                   else{
-                    ROS_INFO_STREAM("Adding xmidpoint,ypoint" << xMidpoint << "," << yMidpoint);
+                    ROS_INFO_STREAM("Adding xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
                     Tables table;
-                    table.midX = xMidpoint;
-                    tbale.midY = yMidpoint;
+                    table.midX = xMidpoint + currX;
+                    table.midY = yMidpoint + currY;
                     tablesVec.push_back(table);
                   }
                 }
@@ -370,7 +374,7 @@ int main(int argc, char** argv){
   ros::NodeHandle n;
   LaserScanToPointCloud lstopc(n);
   Subscriber mapSub = n.subscribe("map", 1000, mapConvert);
-  //Subscriber acmlSub = n.subscribe("/amcl_pose", 2000, &amclReceived);
+  Subscriber acmlSub = n.subscribe("/amcl_pose", 2000, &amclReceived);
 
   
 
