@@ -100,6 +100,9 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
     double xAligndiff = 0;
     double yAligndiff = 0;
 
+    double xmidpoint = 0;
+    double ymidpoint = 0;
+
     // ROS_INFO_STREAM("tableMaybe called");
 
     double acceptablePointError = .02; // accounts for cloud distribution
@@ -117,7 +120,13 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
           if(ydiff > thresholdLength - acceptablePointError && ydiff < thresholdLength + acceptablePointError){
             if(!(find(X.begin(), X.end(), x2) != X.end())){
               if(!(find(Y.begin(), Y.end(), y2) != Y.end())){
+              // find center by taking difference between 2 points -- midpoint formula
+              xmidpoint = (x+x2)/2;
+              ymidpoint = (y+y2)/2;
+              // save in intervals of .5 coordinates?
+              // remove entries that are within 1 coord away?
               ROS_INFO_STREAM("Table at (" << x2 << "," << y2 << ")");
+              ROS_INFO_STREAM("Calculated midoint at " << xmidpoint << "," << ymidpoint);
               //TODO maybe needs to be shifted so center is output 
               }
             }
