@@ -44,10 +44,11 @@ double currY = 0;
 double currTheta = 0;
 
 struct Tables{
-  double currentX,currentY;
+  double midX,midY;
 };
 struct MailBoxes{
-  double currentX,currentY;
+  double midX,midY;
+
 };
 vector<Tables> tablesVec;
 vector<MailBoxes> mailBoxVec;
@@ -111,12 +112,14 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
     double xAligndiff = 0;
     double yAligndiff = 0;
 
-    double xmidpoint = 0;
-    double ymidpoint = 0;
+    double xMidpoint = 0;
+    double yMidpoint = 0;
 
     // ROS_INFO_STREAM("tableMaybe called");
 
     double acceptablePointError = .02; // accounts for cloud distribution
+
+    double acceptableCenterError = .5; // accounts for cloud distribution
     for(int i  = 0; i < pt->points.size(); i++){
         x2 = pt->points[i].x;
         y2 = pt->points[i].y;
@@ -132,13 +135,35 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
             if(!(find(X.begin(), X.end(), x2) != X.end())){
               if(!(find(Y.begin(), Y.end(), y2) != Y.end())){
               // find center by taking difference between 2 points -- midpoint formula
-              xmidpoint = (x+x2)/2;
-              ymidpoint = (y+y2)/2;
+              xMidpoint = (x+x2)/2;
+              yMidpoint = (y+y2)/2;
               // save in intervals of .5 coordinates?
               // remove entries that are within 1 coord away?
               ROS_INFO_STREAM("Table at (" << x2 << "," << y2 << ")");
               ROS_INFO_STREAM("Calculated midoint at " << xmidpoint << "," << ymidpoint);
               //TODO maybe needs to be shifted so center is output 
+
+                //if(none_of(tablesVec.begin(),tablesVec.end(),this.x = placeholders::_1xMidpoint ))
+               
+                for(int i = 0;i<tablesVec.size();i++){
+
+                xMidpointDiff = fabs(xMidpoint-tableVec[i]->midX);
+                yMidpointDiff = fabs(yMidpoint-tableVec[i]->midY);
+
+                  if(xMidpointDiff < acceptableCenterError){
+                    break;
+                  }
+                  else{
+                    ROS_INFO_STREAM("Adding xmidpoint,ypoint" << xMidpoint << "," << yMidpoint);
+                    Tables table;
+                    table.midX = xMidpoint;
+                    tbale.midY = yMidpoint;
+                    tablesVec.push_back(table);
+                  }
+                }
+
+
+
               }
             }
           }
