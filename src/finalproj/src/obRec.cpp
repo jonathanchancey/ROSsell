@@ -182,12 +182,18 @@ public:
     cloud_cluster->height = 1;
     cloud_cluster->is_dense = true;
 
-    pcl::toROSMsg(*cloud_map_cluster,ptMapCloudFiltered);
     pcl::toROSMsg(*cloud_cluster,ptCloudFiltered);
+    pcl::toROSMsg(*cloud_map_cluster,ptMapCloudFiltered);
 
     ros::Duration time_offset(.30);
     ptCloudFiltered.header.frame_id = "base_link";
-    ptCloudFiltered.header.stamp = Time::now()-time_offset; // problems of .20 seconds in the future
+    ptCloudFiltered.header.stamp = Time::now(); // problems of .20 seconds in the future
+
+    // configures the map cloud in the saem way,
+    // maybe needs to have map as frame id
+    // not sure if time needs to be different
+    ptMapCloudFiltered.header.frame_id = "map";
+    ptMapCloudFiltered.header.stamp = Time::now(); // problems of .20 seconds in the future
 
     scan_pub2_.publish(ptCloudFiltered);
 
