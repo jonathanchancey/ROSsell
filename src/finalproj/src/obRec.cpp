@@ -31,7 +31,7 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl-1.7/pcl/PointIndices.h>
-#include <pcl_conversions/pcl_conversions.h>
+#include <pcl_conversions/pcl_conversions.h> // TODO resolve duplicate of line 10?
 #include <pcl_ros/transforms.h>
 
 
@@ -44,6 +44,9 @@ sensor_msgs::PointCloud2 ptCloudFiltered;
 sensor_msgs::PointCloud2 ptCloudAux;
 sensor_msgs::PointCloud filteredCloud;
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
+
+pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_map_cluster (new pcl::PointCloud<pcl::PointXYZ>);
+sensor_msgs::PointCloud2 ptMapCloudFiltered;
 
 
 
@@ -178,19 +181,25 @@ public:
     cloud_cluster->width = cloud_cluster->points.size ();
     cloud_cluster->height = 1;
     cloud_cluster->is_dense = true;
+
+    pcl::toROSMsg(*cloud_map_cluster,ptMapCloudFiltered);
     pcl::toROSMsg(*cloud_cluster,ptCloudFiltered);
 
-   
+    ros::Duration time_offset(.30);
     ptCloudFiltered.header.frame_id = "base_link";
-    ptCloudFiltered.header.stamp = Time::now();
+    ptCloudFiltered.header.stamp = Time::now()-time_offset; // problems of .20 seconds in the future
 
     scan_pub2_.publish(ptCloudFiltered);
 
 
     // TODO print content
-    ROS_INFO_STREAM("ptCloudFiltered.data" << ptCloudFiltered.height);
+    ROS_INFO_STREAM("ptCloudFiltered.data" << cloud_cluster->points[0]);
+
+    // pcl::PointCloud<pcl::PointXYZ> cloud_cluster_;
+    // pcl::fromROSMsg(cloud_cluster,cloud_cluster_);
+
     // TODO make new ptCloud for output
-    pcl_ros::transformPointCloud("map", ptCloudFiltered, ptCloudFiltered, listener_);
+    pcl_ros::transformPointCloud("map", ptCloudFiltered, ptMapCloudFiltered, listener_);
      
 
     sensor_msgs::convertPointCloud2ToPointCloud(ptCloudFiltered,filteredCloud); 
