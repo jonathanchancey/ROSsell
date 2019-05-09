@@ -143,18 +143,22 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
               yMidpoint = (y+y2)/2;
               // save in intervals of .5 coordinates?
               // remove entries that are within 1 coord away?
-              ROS_INFO_STREAM("Table at (" << x2 << "," << y2 << ")");
-              ROS_INFO_STREAM("Calculated midoint at " << xMidpoint << "," << yMidpoint);
+              //ROS_INFO_STREAM("Table at (" << x2 << "," << y2 << ")");
+              //ROS_INFO_STREAM("Calculated midoint at " << xMidpoint << "," << yMidpoint);
               //TODO maybe needs to be shifted so center is output 
 
                 //if(none_of(tablesVec.begin(),tablesVec.end(),this.x = placeholders::_1xMidpoint ))
+
+                
+               if(tablesVec.size() > 1){
+
                
                 for(int i = 0;i<tablesVec.size();i++){
 
-                xMidpointDiff = fabs(xMidpoint-tablesVec[i].midX);
-                yMidpointDiff = fabs(yMidpoint-tablesVec[i].midY);
+                  xMidpointDiff = fabs(xMidpoint-tablesVec[i].midX);
+                  yMidpointDiff = fabs(yMidpoint-tablesVec[i].midY);
 
-                  if(xMidpointDiff < acceptableCenterError){
+                  if(xMidpointDiff > acceptableCenterError){
                     break;
                   }
                   else{
@@ -163,9 +167,19 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
                     table.midX = xMidpoint + currX;
                     table.midY = yMidpoint + currY;
                     tablesVec.push_back(table);
+                    
                   }
                 }
-
+               }
+               else{
+                  ROS_INFO_STREAM("Adding xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
+                    Tables table;
+                    table.midX = xMidpoint + currX;
+                    table.midY = yMidpoint + currY;
+                    tablesVec.push_back(table);
+               }
+                ROS_INFO_STREAM(tablesVec.size());
+            
 
 
               }
@@ -205,8 +219,8 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
               if(!(find(Y.begin(), Y.end(), y2) != Y.end())){
                 xmidpoint = (x+x2)/2;
                 ymidpoint = (y+y2)/2;
-                ROS_INFO_STREAM("Mailbox at (" << x2 << "," << y2 << ")");
-                ROS_INFO_STREAM("Calculated midoint at " << xmidpoint << "," << ymidpoint);
+                //ROS_INFO_STREAM("Mailbox at (" << x2 << "," << y2 << ")");
+                //  ROS_INFO_STREAM("Calculated midoint at " << xmidpoint << "," << ymidpoint);
               }
             }
         }
