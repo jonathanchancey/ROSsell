@@ -41,6 +41,13 @@
 #include <vector>
 #include <map>
 #include <iterator> 
+#include <algorithm>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <tf/transform_listener.h>
+#include <geometry_msgs/PointStamped.h>
 
 
 
@@ -58,9 +65,16 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_map_cluster (new pcl::PointCloud<pcl::
 sensor_msgs::PointCloud2 ptMapCloudFiltered;
 map<double,double> objPoints;
 
+geometry_msgs::PointStamped pt;
+geometry_msgs::PointStamped pt_transformed;
+
 vector<double> X;
 vector<double> Y;
 map<double, double>::iterator itr;
+double currX = 0;
+double currY = 0;
+double currTheta = 0;
+
 
 void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
 
@@ -76,6 +90,26 @@ void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
   }
 
 }
+
+void amclReceived(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg){
+
+    currX = msg->pose.pose.position.x;
+    currY = msg->pose.pose.position.y;
+    currTheta = msg->pose.pose.orientation.w;
+
+
+}
+
+struct compare
+{
+	double key;
+	compare(double const &i): key(i) { }
+
+	bool operator()(double const &i)
+	{
+		return (i == key);
+	}
+};
 
 
 
@@ -93,8 +127,9 @@ public:
   ros::Publisher scan_pub2_;
   ros::Publisher scan_pub3_;
   ros::Publisher scan_pub4_;
+  tf::TransformListener listenerPt;
 
-  // tf::TransformListener listener_;/
+
 
 
 
@@ -211,45 +246,49 @@ public:
     cloud_cluster->height = 1;
     cloud_cluster->is_dense = true;
 
+
     pcl::toROSMsg(*cloud_cluster,ptCloudFiltered);
 
     ptCloudFiltered.header.frame_id = "base_link";
-    ptCloudFiltered.header.stamp = Time::now(); // problems of .20 seconds in the future
+    ptCloudFiltered.header.stamp = Time::now();
 
-    // configures the map cloud in the saem way,
-    // maybe needs to have map as frame id
-    // not sure if time needs to be different
-    ptMapCloudFiltered.header.frame_id = "map";
-    ptMapCloudFiltered.header.stamp = Time::now(); // problems of .20 seconds in the future
 
     scan_pub2_.publish(ptCloudFiltered);
     
+    //sensor_msgs::convertPointCloud2ToPointCloud(ptCloudFiltered,filteredCloud); 
     sensor_msgs::convertPointCloud2ToPointCloud(ptCloudFiltered,filteredCloud); 
-    // ran through eu filter, pcl to pointcloud2 to pointcloud1
 
-    // TODO print content
-    //ROS_INFO_STREAM("ptCloudFiltered.data" << cloud_cluster->points[0]);
+  //   pt.header = filteredCloud.header;
+  //   pt.point.x = filteredCloud.points.back().x;
+  //   pt.point.y = filteredCloud.points.back().y;
+  //   pt.point.z = filteredCloud.points.back().z;
+
+    
+
+
+  // try{
+  //   listenerPt.waitForTransform("/map","/base_link", Time(0), Duration(4));
+  //   listenerPt.transformPoint("/map", Time(0), pt, "/base_link", pt_transformed);
+  // }
+
+  //     catch (tf::TransformException ex){
+  //   ROS_ERROR("%s",ex.what());
+  // }
+
+
+
 
     for(int c = 0; c < filteredCloud.points.size(); c++){
-      for(int k = 0; k < X.size(); k++){
-        if(filteredCloud.points[c].x != X[k] && filteredCloud.points[c].y != Y[k]){
-          objPoints.insert(pair<double,double>((double)filteredCloud.points[c].x,(double)filteredCloud.points[c].y));
-          //ROS_INFO_STREAM("Mailbox/Table found at " << filteredCloud.points[c].x << "," << filteredCloud.points[c].y << ")");
-
-        }
+      if(std::none_of(X.begin(),X.end(), compare(filteredCloud.points[c].x)) && std::none_of(Y.begin(),Y.end(),compare(filteredCloud.points[c].y))){
+        objPoints.insert(pair<double,double>(filteredCloud.points[c].x,filteredCloud.points[c].y));
 
       }
     }
+    //ROS_INFO_STREAM(currX << " " << currY);
+
     for(itr = objPoints.begin(); itr != objPoints.end(); ++itr){
       ROS_INFO_STREAM("Table/Mailbox found at (" << itr->first << "," << itr->second << ")");
-    }
-
-    // pcl::PointCloud<pcl::PointXYZ> cloud_cluster_;
-    // pcl::fromROSMsg(cloud_cluster,cloud_cluster_);
-
-    // TODO make new ptCloud for output
-    //pcl_ros::transformPointCloud("map", ptCloudFiltered, ptMapCloudFiltered, listener_);
-     
+    }     
 
  
 
@@ -273,6 +312,7 @@ int main(int argc, char** argv)
   ros::NodeHandle n;
   LaserScanToPointCloud lstopc(n);
   Subscriber mapSub = n.subscribe("map", 1000, mapConvert);
+  Subscriber acmlSub = n.subscribe("/amcl_pose", 2000, &amclReceived);
 
 
   spin();
