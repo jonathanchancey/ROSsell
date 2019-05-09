@@ -30,9 +30,16 @@ void cloud_callback (const sensor_msgs::PointCloud2ConstPtr& input)
 
     pcl_ros::transformPointCloud(*temp_cloud, *cloud_transformed, transform);
 
+    // cloud_transformed->points[0].x
+
+    for(int c = 0; c < cloud_transformed->points.size(); c++){
+        ROS_INFO_STREAM("cloud_transformed points" << cloud_transformed->points[c].x << "," << cloud_transformed->points[c].y);
+    }
+
     sensor_msgs::PointCloud2 cloud_publish;
     pcl::toROSMsg(*cloud_transformed,cloud_publish);
     cloud_publish.header = input->header;
+    // pcl::fromROSMsg(cloud_publish, )
 
     pub.publish(cloud_publish);
 }

@@ -235,9 +235,7 @@ public:
         if(filteredCloud.points[c].x != X[k] && filteredCloud.points[c].y != Y[k]){
           objPoints.insert(pair<double,double>((double)filteredCloud.points[c].x,(double)filteredCloud.points[c].y));
           //ROS_INFO_STREAM("Mailbox/Table found at " << filteredCloud.points[c].x << "," << filteredCloud.points[c].y << ")");
-
         }
-
       }
     }
     for(itr = objPoints.begin(); itr != objPoints.end(); ++itr){
