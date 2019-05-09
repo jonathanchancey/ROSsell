@@ -17,6 +17,7 @@
 #include <pcl/filters/extract_indices.h>
 #include <vector>
 #include <algorithm>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 // #include <map>
 // #include <iterator>
 // disregard last commit 
@@ -38,6 +39,9 @@ map<double,double> objPoints;
 vector<double> X;
 vector<double> Y;
 map<double, double>::iterator itr;
+double currX = 0;
+double currY = 0;
+double currTheta = 0;
 
 void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
   for(int width = 0; width < msg->info.width; ++width){
@@ -49,6 +53,15 @@ void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
     }
   }
 }
+
+// void amclReceived(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg){
+
+//     currX = msg->pose.pose.position.x;
+//     currY = msg->pose.pose.position.y;
+//     currTheta = msg->pose.pose.orientation.w;
+
+
+// }
 
 struct compare
 {
@@ -167,10 +180,6 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
     double xdiff = 0;
     double ydiff = 0;
 
-    double xAligndiff = 0;
-    double yAligndiff = 0;
-
-    // ROS_INFO_STREAM("tableMaybe called");
 
     double acceptablePointError = .02; // accounts for cloud distribution
     for(int i  = 0; i < pt->points.size(); i++){
@@ -179,10 +188,6 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
 
         xdiff = fabs(x-x2);
         ydiff = fabs(y-y2);
-        //ROS_INFO_STREAM(xdiff);
-        //ROS_INFO_STREAM(ydiff);
-        // if(inRange(thresholdWidth - acceptablePointError, thresholdWidth + acceptablePointError, xdiff)){
-        //   if(inRange(thresholdLength - acceptablePointError, thresholdLength + acceptablePointError, ydiff)){
         if(xdiff > thresholdWidth - acceptablePointError && xdiff < thresholdWidth + acceptablePointError){
           if(ydiff > thresholdLength - acceptablePointError && ydiff < thresholdLength + acceptablePointError){
             if(!(find(X.begin(), X.end(), x2) != X.end())){
@@ -355,6 +360,8 @@ int main(int argc, char** argv){
   ros::NodeHandle n;
   LaserScanToPointCloud lstopc(n);
   Subscriber mapSub = n.subscribe("map", 1000, mapConvert);
+  //Subscriber acmlSub = n.subscribe("/amcl_pose", 2000, &amclReceived);
+
   
 
   spin();

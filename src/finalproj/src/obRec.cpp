@@ -75,7 +75,7 @@ void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
     }
   }
 
-}
+}z
 
 
 
