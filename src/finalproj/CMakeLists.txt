@@ -68,16 +68,18 @@ include_directories(
 
 )
 add_executable(exploreNode src/exploreNode.cpp)
-add_executable(obRec src/obRec.cpp)
+# add_executable(obRec src/obRec.cpp)
 add_executable(testNode src/testNode.cpp)
 add_executable(coruNode src/coruNode.cpp)
+add_executable(rec src/rec.cpp)
 
 
 
 target_link_libraries(exploreNode ${catkin_LIBRARIES})
-target_link_libraries(obRec ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+# target_link_libraries(obRec ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 target_link_libraries(testNode ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 target_link_libraries(coruNode ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(rec ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 
 
