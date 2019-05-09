@@ -120,7 +120,7 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
     double acceptablePointError = .2; // accounts for cloud distribution
     for(int i = 0;i < pt->points.size();i++){
         x2 = pt->points[i].x;
-        y2 = pt->points[i].y;s
+        y2 = pt->points[i].y;
     }
 }
 
