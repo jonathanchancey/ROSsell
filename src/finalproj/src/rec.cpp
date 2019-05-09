@@ -43,6 +43,17 @@ double currX = 0;
 double currY = 0;
 double currTheta = 0;
 
+struct Tables{
+  double currentX,currentY;
+};
+struct MailBoxes{
+  double currentX,currentY;
+};
+vector<Tables> tablesVec;
+vector<MailBoxes> mailBoxVec;
+
+
+
 void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
   for(int width = 0; width < msg->info.width; ++width){
     for(int height = 0; height < msg->info.height; ++ height){
