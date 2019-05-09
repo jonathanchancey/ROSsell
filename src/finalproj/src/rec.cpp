@@ -15,7 +15,7 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/filters/extract_indices.h>
-// #include <vector>
+#include <vector>
 // #include <map>
 // #include <iterator> 
 
@@ -38,9 +38,6 @@ vector<double> Y;
 map<double, double>::iterator itr;
 
 void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
-
-
-
   for(int width = 0; width < msg->info.width; ++width){
     for(int height = 0; height < msg->info.height; ++ height){
       if(msg->data[height*msg->info.width+width] > 0){
@@ -49,14 +46,58 @@ void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
       }
     }
   }
-
 }
 
+bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
+    // input x y is suspected table leg
+    // searches all other points in cloud 
+    // attempts to find table
+    double thresholdWidth  = 1.8;
+    double thresholdLength = 1.32;
 
+    double x2 = 0;
+    double y2 = 0;
 
+    double xdiff = 0;
+    double ydiff = 0;
+
+    double xAligndiff = 0;
+    double yAligndiff = 0;
+
+    ROS_INFO_STREAM("tableMaybe called");
+
+    double acceptablePointError = .2; // accounts for cloud distribution
+    for(int i  = 0; i < pt->points.size(); i++){
+        x2 = pt->points[i].x;
+        y2 = pt->points[i].y;
+
+        //TODO add perpendicular functionality
+        //TODO add pythag functionality
+        ydiff = fabs(y - thresholdLength);
+        xAligndiff = fabs(x - x2); // should be small
+        ydiff = fabs(x - thresholdWidth);
+        xAligndiff = fabs(y - y2); // should be small
+        // checks for same x with varying y +-
+        bool check = false;
+        if (xAligndiff < acceptablePointError){ 
+            // ROS_INFO("Found point that aligns with x @ %f",x2);
+            if (ydiff < acceptablePointError){
+                ROS_INFO("Found point that succeeds with y @ %f",x2);
+                check = true;
+            }
+        }
+        if (yAligndiff < acceptablePointError){
+            // ROS_INFO("Found point that aligns with y @ %f",x2);
+            if (xdiff < acceptablePointError){
+                ROS_INFO("Found point that succeeds with x @ %f,%f",x2,y2);
+                return check;
+            }
+        }
+        return false;
+    }
+}
 
 class LaserScanToPointCloud{
-
 public:
 
   ros::NodeHandle n_;
@@ -65,14 +106,11 @@ public:
   message_filters::Subscriber<sensor_msgs::LaserScan> laser_sub_;
   tf::MessageFilter<sensor_msgs::LaserScan> laser_notifier_;
   ros::Publisher scan_pub_;
-  ros::Publisher scan_pub2_;
+  ros::Publisher scan_pub2_; 
   ros::Publisher scan_pub3_;
   ros::Publisher scan_pub4_;
 
   // tf::TransformListener listener_;/
-
-
-
 
   LaserScanToPointCloud(ros::NodeHandle n) : 
     n_(n),
@@ -84,10 +122,8 @@ public:
     laser_notifier_.setTolerance(ros::Duration(0.01));
     scan_pub_ = n_.advertise<sensor_msgs::PointCloud>("/my_cloud",1);
     scan_pub2_ = n_.advertise<sensor_msgs::PointCloud2>("/cloud_Ec",1);
-    //  scan_pub3_ = n_.advertise<sensor_msgs::PointCloud2>("/cloud_noEc",1);
+    scan_pub3_ = n_.advertise<sensor_msgs::PointCloud2>("/cloud_noEc",1);
     scan_pub4_ = n_.advertise<sensor_msgs::PointCloud>("/fil_cloud",1);
-
-
 
   }
 
@@ -151,7 +187,6 @@ public:
     extract.setIndices (inliers);
     extract.setNegative (false);
     
-
     // Get the points associated with the linear surface
     extract.filter (*cloud_plane);
     //std::cout << "PointCloud representing the linear component: " << cloud_plane->points.size () << " data points." << std::endl;
@@ -162,7 +197,6 @@ public:
     *cloud_filtered = *cloud_f;
   }
   
-
   pcl::search::KdTree<pcl::PointXYZ>::Ptr tree (new pcl::search::KdTree<pcl::PointXYZ>);
   tree->setInputCloud (cloud_filtered);
 
@@ -175,9 +209,7 @@ public:
   ec.setInputCloud (cloud_filtered);
   ec.extract (cluster_indices);
 
-
   
-
   for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
   {
     for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
@@ -185,45 +217,52 @@ public:
     cloud_cluster->width = cloud_cluster->points.size ();
     cloud_cluster->height = 1;
     cloud_cluster->is_dense = true;
-
     pcl::toROSMsg(*cloud_cluster,ptCloudFiltered);
 
+   
     ptCloudFiltered.header.frame_id = "base_link";
-    ptCloudFiltered.header.stamp = Time::now(); // problems of .20 seconds in the future
-
-    // configures the map cloud in the saem way,
-    // maybe needs to have map as frame id
-    // not sure if time needs to be different
-    ptMapCloudFiltered.header.frame_id = "map";
-    ptMapCloudFiltered.header.stamp = Time::now(); // problems of .20 seconds in the future
+    ptCloudFiltered.header.stamp = Time::now();
 
     scan_pub2_.publish(ptCloudFiltered);
+
+    sensor_msgs::convertPointCloud2ToPointCloud(ptCloudFiltered,filteredCloud);
     
-    sensor_msgs::convertPointCloud2ToPointCloud(ptCloudFiltered,filteredCloud); 
-    // ran through eu filter, pcl to pointcloud2 to pointcloud1
+    // checks if table
+    // for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it){
+    //     ROS_INFO_STREAM(cluster_indices.begin()->points.x);
+        
+    // }
 
-
-
+    cloud_filtered->points[0].x;
+    for (int i = 0; i < cloud_filtered->points.size();i++){
+        ROS_INFO("cloud_filtered->points[i].xy = %f,%f", cloud_filtered->points[i].x,cloud_filtered->points[i].y);
+        tableMaybe(cloud_filtered->points[i].x, cloud_filtered->points[i].y,&filteredCloud);// TODO may need to change filteredCloud
+    }
+    // tableMaybe(-8.0,-2.0,&cloud_filtered);
 
     scan_pub4_.publish(filteredCloud);
   }
+    pcl::toROSMsg(*cloud_filtered,ptCloudAux);
+    scan_pub3_.publish(ptCloudAux);
+
+    scan_pub_.publish(cloud);
   }
 };
 
-
-
-int main(int argc, char** argv)
-{
-  
-  ros::init(argc, argv, "obRec");
+int main(int argc, char** argv){
+  ros::init(argc, argv, "rec");
   ros::NodeHandle n;
   LaserScanToPointCloud lstopc(n);
   Subscriber mapSub = n.subscribe("map", 1000, mapConvert);
+  
+//   while(ok()){
+//         Duration(2).sleep();
 
+
+//         spinOnce();
+//     }
 
   spin();
 
-  
   return 0;
-
 }
