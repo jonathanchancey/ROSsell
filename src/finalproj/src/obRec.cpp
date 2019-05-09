@@ -33,6 +33,15 @@
 #include <pcl-1.7/pcl/PointIndices.h>
 #include <pcl_conversions/pcl_conversions.h> // TODO resolve duplicate of line 10?
 #include <pcl_ros/transforms.h>
+#include <nav_msgs/OccupancyGrid.h>
+#include <sstream>
+#include <geometry_msgs/Point.h>
+#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/Quaternion.h>
+#include <vector>
+#include <map>
+#include <iterator> 
+
 
 
 using namespace ros;
@@ -47,6 +56,26 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::Poin
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_map_cluster (new pcl::PointCloud<pcl::PointXYZ>);
 sensor_msgs::PointCloud2 ptMapCloudFiltered;
+map<double,double> objPoints;
+
+vector<double> X;
+vector<double> Y;
+map<double, double>::iterator itr;
+
+void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
+
+
+
+  for(int width = 0; width < msg->info.width; ++width){
+    for(int height = 0; height < msg->info.height; ++ height){
+      if(msg->data[height*msg->info.width+width] > 0){
+        X.push_back(width * msg->info.resolution+msg->info.resolution/2 -20);
+        Y.push_back(height * msg->info.resolution + msg->info.resolution/2 -20);
+      }
+    }
+  }
+
+}
 
 
 
@@ -183,9 +212,7 @@ public:
     cloud_cluster->is_dense = true;
 
     pcl::toROSMsg(*cloud_cluster,ptCloudFiltered);
-    pcl::toROSMsg(*cloud_map_cluster,ptMapCloudFiltered);
 
-    ros::Duration time_offset(.30);
     ptCloudFiltered.header.frame_id = "base_link";
     ptCloudFiltered.header.stamp = Time::now(); // problems of .20 seconds in the future
 
@@ -196,20 +223,35 @@ public:
     ptMapCloudFiltered.header.stamp = Time::now(); // problems of .20 seconds in the future
 
     scan_pub2_.publish(ptCloudFiltered);
-
+    
+    sensor_msgs::convertPointCloud2ToPointCloud(ptCloudFiltered,filteredCloud); 
+    // ran through eu filter, pcl to pointcloud2 to pointcloud1
 
     // TODO print content
-    ROS_INFO_STREAM("ptCloudFiltered.data" << cloud_cluster->points[0]);
+    //ROS_INFO_STREAM("ptCloudFiltered.data" << cloud_cluster->points[0]);
+
+    for(int c = 0; c < filteredCloud.points.size(); c++){
+      for(int k = 0; k < X.size(); k++){
+        if(filteredCloud.points[c].x != X[k] && filteredCloud.points[c].y != Y[k]){
+          objPoints.insert(pair<double,double>((double)filteredCloud.points[c].x,(double)filteredCloud.points[c].y));
+          //ROS_INFO_STREAM("Mailbox/Table found at " << filteredCloud.points[c].x << "," << filteredCloud.points[c].y << ")");
+
+        }
+
+      }
+    }
+    for(itr = objPoints.begin(); itr != objPoints.end(); ++itr){
+      ROS_INFO_STREAM("Table/Mailbox found at (" << itr->first << "," << itr->second << ")");
+    }
 
     // pcl::PointCloud<pcl::PointXYZ> cloud_cluster_;
     // pcl::fromROSMsg(cloud_cluster,cloud_cluster_);
 
     // TODO make new ptCloud for output
-    pcl_ros::transformPointCloud("map", ptCloudFiltered, ptMapCloudFiltered, listener_);
+    //pcl_ros::transformPointCloud("map", ptCloudFiltered, ptMapCloudFiltered, listener_);
      
 
-    sensor_msgs::convertPointCloud2ToPointCloud(ptCloudFiltered,filteredCloud); 
-    // ran through eu filter, pcl to pointcloud2 to pointcloud1
+ 
 
     scan_pub4_.publish(filteredCloud);
   }
@@ -230,6 +272,8 @@ int main(int argc, char** argv)
   ros::init(argc, argv, "obRec");
   ros::NodeHandle n;
   LaserScanToPointCloud lstopc(n);
+  Subscriber mapSub = n.subscribe("map", 1000, mapConvert);
+
 
   spin();
 
