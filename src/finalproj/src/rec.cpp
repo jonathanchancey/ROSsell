@@ -150,38 +150,31 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
                 //if(none_of(tablesVec.begin(),tablesVec.end(),this.x = placeholders::_1xMidpoint ))
 
                 
-               if(tablesVec.size() > 1){
-
+               if(tablesVec.size() >= 1){// changed to >= from > because it starts at 0 
                
                 for(int i = 0;i<tablesVec.size();i++){
 
                   xMidpointDiff = fabs(xMidpoint-tablesVec[i].midX);
                   yMidpointDiff = fabs(yMidpoint-tablesVec[i].midY);
 
+                  // ROS_INFO("MidPointDiff = %f,%f",xMidpointDiff,yMidpointDiff);
                   if(xMidpointDiff > acceptableCenterError){
-                    break;
-                  }
-                  else{
                     ROS_INFO_STREAM("Adding xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
                     Tables table;
                     table.midX = xMidpoint + currX;
                     table.midY = yMidpoint + currY;
                     tablesVec.push_back(table);
-                    
                   }
                 }
                }
                else{
-                  ROS_INFO_STREAM("Adding xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
+                  ROS_INFO_STREAM("Adding THE FIRST POINT xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
                     Tables table;
                     table.midX = xMidpoint + currX;
                     table.midY = yMidpoint + currY;
                     tablesVec.push_back(table);
                }
-                ROS_INFO_STREAM(tablesVec.size());
-            
-
-
+                // ROS_INFO_STREAM(tablesVec.size());
               }
             }
           }
