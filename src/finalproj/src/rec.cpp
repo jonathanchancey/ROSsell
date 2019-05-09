@@ -64,7 +64,7 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
     double xAligndiff = 0;
     double yAligndiff = 0;
 
-    ROS_INFO_STREAM("tableMaybe called");
+    // ROS_INFO_STREAM("tableMaybe called");
 
     double acceptablePointError = .2; // accounts for cloud distribution
     for(int i  = 0; i < pt->points.size(); i++){
@@ -79,23 +79,48 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
         xAligndiff = fabs(y - y2); // should be small
         // checks for same x with varying y +-
         bool check = false;
-        if (xAligndiff < acceptablePointError){ 
+        if (xAligndiff < acceptablePointError){ // adjusts for scattered error for y in x direction
             // ROS_INFO("Found point that aligns with x @ %f",x2);
-            if (ydiff < acceptablePointError){
-                ROS_INFO("Found point that succeeds with y @ %f",x2);
+            if (ydiff < acceptablePointError){ // if found y in acceptable range mark for potential table
+                // ROS_INFO("IT'S Y TIME Found point that succeeds with y @ %f,%f",x2,y2);
                 check = true;
+                // Left/Right of x, y
             }
         }
-        if (yAligndiff < acceptablePointError){
+        if (yAligndiff < acceptablePointError){ // adjusts for scattered error for x in y direction
             // ROS_INFO("Found point that aligns with y @ %f",x2);
-            if (xdiff < acceptablePointError){
-                ROS_INFO("Found point that succeeds with x @ %f,%f",x2,y2);
-                ROS_INFO("Derived from original x @ %f,%f",x,y);
-
-                return check;
+            if (xdiff < acceptablePointError){ // if x is in acceptable range
+                
+                // return check;
+                if (check){
+                    ROS_INFO("Found point that succeeds with x @ %f,%f",x2,y2);
+                    ROS_INFO("Derived from original x @ %f,%f",x,y);
+                    ROS_INFO_STREAM("WE FOUND BOTH POINTS, THAT'S A TABLE");
+                }
             }
         }
-        return false;
+        // return false;
+    }
+    
+}
+
+
+bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
+    double thresholdWidth  = 0.2;
+    double thresholdLength = 0.2;
+    
+    double x2 = 0;
+    double y2 = 0;
+
+    double xdiff = 0;
+    double ydiff = 0;
+
+    double xAligndiff = 0;
+    double yAligndiff = 0;
+    double acceptablePointError = .2; // accounts for cloud distribution
+    for(int i = 0;i < pt->points.size();i++){
+        x2 = pt->points[i].x;
+        y2 = pt->points[i].y;s
     }
 }
 
@@ -237,7 +262,7 @@ public:
 
     cloud_filtered->points[0].x;
     for (int i = 0; i < cloud_filtered->points.size();i++){
-        ROS_INFO("cloud_filtered->points[i].xy = %f,%f", cloud_filtered->points[i].x,cloud_filtered->points[i].y);
+        ROS_INFO("cloud_filtered->points[%d/%d].xy = %f,%f",i ,cloud_filtered->points.size(), cloud_filtered->points[i].x,cloud_filtered->points[i].y);
         tableMaybe(cloud_filtered->points[i].x, cloud_filtered->points[i].y,&filteredCloud);// TODO may need to change filteredCloud
     }
     // tableMaybe(-8.0,-2.0,&cloud_filtered);
