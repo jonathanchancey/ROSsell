@@ -133,46 +133,6 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
           }
         }
     }
-    // for(int i  = 0; i < pt->points.size(); i++){
-    //     x2 = pt->points[i].x;
-    //     y2 = pt->points[i].y;
-
-    //     //TODO add perpendicular functionality
-    //     //TODO add pythag functionality
-    //     xAligndiff = fabs(x - x2); // should be small
-    //     yAligndiff = fabs(y - y2); // should be small
-
-    //     ydiff = fabs(yAligndiff - thresholdLength);
-    //     xdiff = fabs(xAligndiff - thresholdWidth);
-    //     // checks for same x with varying y +-
-    //     bool check = false;
-    //     if (xAligndiff < acceptablePointError){ // adjusts for scattered error for y in x direction
-    //         // ROS_INFO("Found point that aligns with x @ %f",x2);
-    //         if (ydiff < acceptablePointError){ // if found y in acceptable range mark for potential table
-    //             // ROS_INFO("IT'S Y TIME Found point that succeeds with y @ %f,%f",x2,y2);
-    //             check = true;
-    //             ROS_INFO("Found point that succeeds with x @ %f,%f",x2,y2);
-    //             ROS_INFO("Derived from original x @ %f,%f",x,y);
-    //             // Left/Right of x, y
-    //         }
-    //     }
-    //     // TODO add this check after we confirm detect lengthwise
-    //     // TODO use this only for finding center point above/below
-    //     // if (yAligndiff < acceptablePointError){ // adjusts for scattered error for x in y direction
-    //     //     // ROS_INFO("Found point that aligns with y @ %f",x2);
-    //     //     if (xdiff < acceptablePointError){ // if x is in acceptable range
-                
-    //     //         // return check;
-    //     //         if (check){
-    //     //             ROS_INFO("Found point that succeeds with x @ %f,%f",x2,y2);
-    //     //             ROS_INFO("Derived from original x @ %f,%f",x,y);
-    //     //             ROS_INFO_STREAM("WE FOUND BOTH POINTS, THAT'S A TABLE");
-    //     //         }
-    //     //     }
-    //     // }
-    //     // return false;
-    // }
-    
 }
 
 
@@ -189,6 +149,8 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
     double xdiff = 0;
     double ydiff = 0;
 
+    double xmidpoint = 0;
+    double ymidpoint = 0;
 
     double acceptablePointError = .02; // accounts for cloud distribution
     for(int i  = 0; i < pt->points.size(); i++){
@@ -201,7 +163,10 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
           if(ydiff > thresholdLength - acceptablePointError && ydiff < thresholdLength + acceptablePointError){
             if(!(find(X.begin(), X.end(), x2) != X.end())){
               if(!(find(Y.begin(), Y.end(), y2) != Y.end())){
-              ROS_INFO_STREAM("Mailbox at (" << x2 << "," << y2 << ")");
+                xmidpoint = (x+x2)/2;
+                ymidpoint = (y+y2)/2;
+                ROS_INFO_STREAM("Mailbox at (" << x2 << "," << y2 << ")");
+                ROS_INFO_STREAM("Calculated midoint at " << xmidpoint << "," << ymidpoint);
               }
             }
         }
