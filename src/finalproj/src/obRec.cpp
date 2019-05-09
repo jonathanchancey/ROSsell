@@ -248,19 +248,14 @@ public:
     // pcl::fromROSMsg(cloud_cluster,cloud_cluster_);
 
     // TODO make new ptCloud for output
-    //pcl_ros::transformPointCloud("map", ptCloudFiltered, ptMapCloudFiltered, listener_);
+    // pcl_ros::transformPointCloud("map", ptCloudFiltered, ptMapCloudFiltered, listener_);
      
 
  
 
     scan_pub4_.publish(filteredCloud);
+
   }
-
-    pcl::toROSMsg(*cloud_filtered,ptCloudAux);
-    scan_pub3_.publish(ptCloudAux);
-
-    scan_pub_.publish(cloud);
-
   }
 };
 
