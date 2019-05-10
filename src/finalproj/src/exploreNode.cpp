@@ -74,12 +74,13 @@ int main(int argc, char**argv){
         ac.waitForResult(Duration(30));
         if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
             ROS_INFO_STREAM("Success");
-            spinOnce();
             sendIt.data = true;
             pubGoal.publish(sendIt);
             Duration(5).sleep();
             sendIt.data = false;
             pubGoal.publish(sendIt);
+            spinOnce();
+
 
         }
 
