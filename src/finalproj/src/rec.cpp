@@ -432,13 +432,15 @@ public:
         
     // }
 
-    cloud_filtered->points[0].x;
-    for (int i = 0; i < filteredCloud.points.size();i++){
+    // cloud_filtered->points[0].x;
+    if (goalDone){ // ONLY calls detection functions if goalDone is true
+      for (int i = 0; i < filteredCloud.points.size();i++){
         //ROS_INFO("cloud_filtered->points[%d/%d].xy = %f,%f",i ,cloud_filtered->points.size(), cloud_filtered->points[i].x,cloud_filtered->points[i].y);
         tableMaybe(filteredCloud.points[i].x, filteredCloud.points[i].y,&filteredCloud);// TODO may need to change filteredCloud
         maybeMailbox(filteredCloud.points[i].x, filteredCloud.points[i].y,&filteredCloud);// TODO may need to change filteredCloud
-
+      }
     }
+    
     // tableMaybe(-8.0,-2.0,&cloud_filtered);
 
     scan_pub4_.publish(filteredCloud);
