@@ -168,8 +168,8 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
         //   if(inRange(thresholdLength - acceptablePointError, thresholdLength + acceptablePointError, ydiff)){
         if(xdiff > thresholdWidth - acceptablePointError && xdiff < thresholdWidth + acceptablePointError){
           if(ydiff > thresholdLength - acceptablePointError && ydiff < thresholdLength + acceptablePointError){
-            if(!(find(X.begin(), X.end(), x2) != X.end())){
-              if(!(find(Y.begin(), Y.end(), y2) != Y.end())){
+            if(!(find(X.begin(), X.end(), x2 + currX) != X.end())){
+              if(!(find(Y.begin(), Y.end(), y2 + currY) != Y.end())){
               // find center by taking difference between 2 points -- midpoint formula
               xMidpoint = (x+x2)/2;
               yMidpoint = (y+y2)/2;
@@ -250,8 +250,8 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
         ydiff = fabs(y-y2);
         if(xdiff > thresholdWidth - acceptablePointError && xdiff < thresholdWidth + acceptablePointError){
           if(ydiff > thresholdLength - acceptablePointError && ydiff < thresholdLength + acceptablePointError){
-            if(!(find(X.begin(), X.end(), x2) != X.end())){
-              if(!(find(Y.begin(), Y.end(), y2) != Y.end())){
+            if(!(find(X.begin(), X.end(), x2 + currX) != X.end())){
+              if(!(find(Y.begin(), Y.end(), y2 + currY) != Y.end())){
                 xMidpoint = (x+x2)/2;
                 yMidpoint = (y+y2)/2;
                 //ROS_INFO_STREAM("Mailbox at (" << x2 << "," << y2 << ")");
@@ -433,13 +433,13 @@ public:
     // }
 
     // cloud_filtered->points[0].x;
-    if (goalDone){ // ONLY calls detection functions if goalDone is true
+    //if (goalDone){ // ONLY calls detection functions if goalDone is true
       for (int i = 0; i < filteredCloud.points.size();i++){
         //ROS_INFO("cloud_filtered->points[%d/%d].xy = %f,%f",i ,cloud_filtered->points.size(), cloud_filtered->points[i].x,cloud_filtered->points[i].y);
         tableMaybe(filteredCloud.points[i].x, filteredCloud.points[i].y,&filteredCloud);// TODO may need to change filteredCloud
         maybeMailbox(filteredCloud.points[i].x, filteredCloud.points[i].y,&filteredCloud);// TODO may need to change filteredCloud
       }
-    }
+    //}
     
     // tableMaybe(-8.0,-2.0,&cloud_filtered);
 
