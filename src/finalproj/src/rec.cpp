@@ -7,7 +7,7 @@
 #include "geometry_msgs/Point32.h"
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <sensor_msgs/PointCloud2.h>
-
+#include <std_msgs/Bool.h>
 #include <pcl_ros/transforms.h>
 #include <pcl/filters/voxel_grid.h>
 #include <nav_msgs/OccupancyGrid.h>
@@ -31,11 +31,9 @@ sensor_msgs::PointCloud2 ptCloudFiltered;
 sensor_msgs::PointCloud2 ptCloudAux;
 sensor_msgs::PointCloud filteredCloud;
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
-
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_map_cluster (new pcl::PointCloud<pcl::PointXYZ>);
 sensor_msgs::PointCloud2 ptMapCloudFiltered;
 map<double,double> objPoints;
-
 vector<double> X;
 vector<double> Y;
 map<double, double>::iterator itr;
@@ -43,6 +41,7 @@ double currX = 0;
 double currY = 0;
 double currTheta = 0;
 double yaw = 0;
+bool goalDone = false;
 
 struct Tables{
   double midX,midY;
@@ -53,6 +52,13 @@ struct MailBoxes{
 };
 vector<Tables> tablesVec;
 vector<MailBoxes> mailBoxVec;
+
+void goalReceived(const std_msgs::Bool::ConstPtr& msg){
+
+    goalDone = msg->data;
+    
+
+}
 
 void amclReceived(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg){
 
@@ -441,9 +447,7 @@ int main(int argc, char** argv){
   LaserScanToPointCloud lstopc(n);
   Subscriber mapSub = n.subscribe("map", 1000, mapConvert);
   Subscriber acmlSub = n.subscribe("/amcl_pose", 2000, &amclReceived);
-
- 
-
+  Subscriber goalSub = n.subscribe("/fireFire", 1000, &goalReceived);
   
 
   spin();
