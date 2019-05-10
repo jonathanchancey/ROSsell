@@ -61,7 +61,7 @@ void amclReceived(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
     currTheta = msg->pose.pose.orientation.w;
     yaw = atan2(2.0*(msg->pose.pose.orientation.y*msg->pose.pose.orientation.z + msg->pose.pose.orientation.w*msg->pose.pose.orientation.x),msg->pose.pose.orientation.w*msg->pose.pose.orientation.w - msg->pose.pose.orientation.x*msg->pose.pose.orientation.x - msg->pose.pose.orientation.y*msg->pose.pose.orientation.y + msg->pose.pose.orientation.z*msg->pose.pose.orientation.z);
     
-   ROS_INFO_STREAM("this is angle" <<angle << " ");
+  //  ROS_INFO_STREAM("this is angle" << yaw << " ");
   
 
 }
