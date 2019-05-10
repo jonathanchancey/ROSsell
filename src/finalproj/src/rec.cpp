@@ -182,7 +182,7 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
                 for(int i = 0;i<tablesVec.size();i++){
 
                   xMidpointDiff = fabs((xMidpoint + currX)-tablesVec[i].midX); // added (xMidpoint + currX) 
-                  yMidpointDiff = fabs((yMidpoint + currX)-tablesVec[i].midY);
+                  yMidpointDiff = fabs((yMidpoint + currY)-tablesVec[i].midY);
 
                   // ROS_INFO("MidPointDiff = %f,%f",xMidpointDiff,yMidpointDiff);
                   if(xMidpointDiff > acceptableCenterError){
@@ -192,6 +192,7 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
                     table.midY = yMidpoint + currY;
                     tablesVec.push_back(table);
                     printFoundObjects();
+                    return 0;
                   }
                 }
                }
@@ -253,12 +254,12 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
 
 
                   
-               if(mailBoxVec.size() >= 1){// changed to >= from > because it starts at 0 
+               if(!mailBoxVec.empty()){// changed to >= from > because it starts at 0 
                   
                 for(int i = 0;i<mailBoxVec.size();i++){
 
                   xMidpointDiff = fabs((xMidpoint + currX) - mailBoxVec[i].midX);
-                  yMidpointDiff = fabs((yMidpoint + currX) - mailBoxVec[i].midY);
+                  yMidpointDiff = fabs((yMidpoint + currY) - mailBoxVec[i].midY);
 
                   // ROS_INFO("MidPointDiff = %f,%f",xMidpointDiff,yMidpointDiff);
                   if(xMidpointDiff > acceptableCenterError){
@@ -269,6 +270,7 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
                     mb.midY = yMidpoint + currY;
                     mailBoxVec.push_back(mb);
                     printFoundObjects();
+                    return 0;
                   }
                 }
                }
