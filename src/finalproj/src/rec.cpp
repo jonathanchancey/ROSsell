@@ -75,6 +75,23 @@ void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
 }
 
 
+// prints objects found so far
+void printFoundObjects(){
+  // ROS_INFO("Entered printFoundObjects()");
+  if (mailBoxVec.size() > 0){
+    for (int i = 0; i < mailBoxVec.size();i++){
+      ROS_INFO("mailbox[%d] at position &f,%f",i,mailBoxVec[i].midX,mailBoxVec[i].midY); 
+    }
+  }
+
+  if (tablesVec.size() > 0){
+    for (int i = 0; i < tablesVec.size();i++){
+      ROS_INFO("table[%d] at position &f,%f",i,tablesVec[i].midX,tablesVec[i].midY); 
+    }
+  }
+}
+
+
 
 struct compare
 {
@@ -151,6 +168,7 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
 
                 
                if(tablesVec.size() >= 1){// changed to >= from > because it starts at 0 
+              //  ROS_INFO("currTheta = %f", currTheta); 
                
                 for(int i = 0;i<tablesVec.size();i++){
 
