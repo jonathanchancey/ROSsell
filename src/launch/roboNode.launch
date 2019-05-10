@@ -1,0 +1,14 @@
+<launch>
+  <node
+    pkg="finalproj"
+    type="rec"
+    name="rec"
+    output="screen"
+  />
+  <node
+    pkg="finalproj"
+    type="exploreNode"
+    name="exploreNode"
+    output="screen"
+  />
+</launch>
