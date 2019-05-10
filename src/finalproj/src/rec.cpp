@@ -142,7 +142,7 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
 
     double acceptablePointError = .02; // accounts for cloud distribution
 
-    double acceptableCenterError = .5; // accounts for cloud distribution
+    double acceptableCenterError = 1.0; // accounts for cloud distribution
     for(int i  = 0; i < pt->points.size(); i++){
         x2 = pt->points[i].x;
         y2 = pt->points[i].y;
@@ -174,12 +174,12 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
                
                 for(int i = 0;i<tablesVec.size();i++){
 
-                  xMidpointDiff = fabs(xMidpoint-tablesVec[i].midX);
-                  yMidpointDiff = fabs(yMidpoint-tablesVec[i].midY);
+                  xMidpointDiff = fabs((xMidpoint + currX)-tablesVec[i].midX); // added (xMidpoint + currX) 
+                  yMidpointDiff = fabs((yMidpoint + currX)-tablesVec[i].midY);
 
                   // ROS_INFO("MidPointDiff = %f,%f",xMidpointDiff,yMidpointDiff);
                   if(xMidpointDiff > acceptableCenterError){
-                    ROS_INFO_STREAM("Adding xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
+                    ROS_INFO_STREAM("Adding TABLE xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
 
                     table.midX = xMidpoint + currX;
                     table.midY = yMidpoint + currY;
@@ -188,7 +188,7 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
                 }
                }
                else{
-                  ROS_INFO_STREAM("Adding THE FIRST POINT xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
+                  ROS_INFO_STREAM("Adding THE FIRST TABLE point xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
 
                     table.midX = xMidpoint + currX;
                     table.midY = yMidpoint + currY;
@@ -225,7 +225,7 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
     MailBoxes mb;
     double acceptablePointError = .02; // accounts for cloud distribution
 
-    double acceptableCenterError = .5; // accounts for cloud distribution
+    double acceptableCenterError = 1.0; // we know the name hasn't changed, this is for mailbox 
     for(int i  = 0; i < pt->points.size(); i++){
         x2 = pt->points[i].x;
         y2 = pt->points[i].y;
@@ -246,14 +246,14 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
                   
                if(mailBoxVec.size() >= 1){// changed to >= from > because it starts at 0 
                   
-                for(int i = 0;i<tablesVec.size();i++){
+                for(int i = 0;i<mailBoxVec.size();i++){
 
-                  xMidpointDiff = fabs(xMidpoint-mailBoxVec[i].midX);
-                  yMidpointDiff = fabs(yMidpoint-mailBoxVec[i].midY);
+                  xMidpointDiff = fabs((xMidpoint + currX) - mailBoxVec[i].midX);
+                  yMidpointDiff = fabs((yMidpoint + currX) - mailBoxVec[i].midY);
 
                   // ROS_INFO("MidPointDiff = %f,%f",xMidpointDiff,yMidpointDiff);
                   if(xMidpointDiff > acceptableCenterError){
-                    ROS_INFO_STREAM("Adding xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
+                    ROS_INFO_STREAM("Adding MAILBOX xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
                   
                     mb.midX = xMidpoint + currX;
                     mb.midY = yMidpoint + currY;
@@ -262,7 +262,7 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
                 }
                }
                else{
-                  ROS_INFO_STREAM("Adding THE FIRST POINT xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
+                  ROS_INFO_STREAM("Adding the FIRST MAILBOX xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
                    
                     mb.midX = xMidpoint + currX;
                     mb.midY = yMidpoint + currY;
