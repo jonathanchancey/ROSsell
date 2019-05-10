@@ -82,15 +82,18 @@ void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
 // prints objects found so far
 void printFoundObjects(){
   // ROS_INFO("Entered printFoundObjects()");
-  if (mailBoxVec.size() > 0){
-    for (int i = 0; i < mailBoxVec.size();i++){
-      ROS_INFO("mailbox[%d] at position &f,%f",i,mailBoxVec[i].midX,mailBoxVec[i].midY); 
+
+  ROS_INFO_STREAM("Found Objects List:");
+
+  if (!tablesVec.empty()){
+    for (int i = 0; i < tablesVec.size(); i++){
+      ROS_INFO_STREAM("tables[" << i << "]" << " at position " << tablesVec[i].midX << "," << tablesVec[i].midY);
     }
   }
 
-  if (tablesVec.size() > 0){
-    for (int i = 0; i < tablesVec.size();i++){
-      ROS_INFO("table[%d] at position &f,%f",i,tablesVec[i].midX,tablesVec[i].midY); 
+  if (!mailBoxVec.empty()){
+    for (int i = 0; i < mailBoxVec.size(); i++){
+      ROS_INFO_STREAM("mailbox[" << i << "]" << " at position " << mailBoxVec[i].midX << "," << mailBoxVec[i].midY);
     }
   }
 }
@@ -188,6 +191,7 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
                     table.midX = xMidpoint + currX;
                     table.midY = yMidpoint + currY;
                     tablesVec.push_back(table);
+                    printFoundObjects();
                   }
                 }
                }
@@ -197,6 +201,7 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
                     table.midX = xMidpoint + currX;
                     table.midY = yMidpoint + currY;
                     tablesVec.push_back(table);
+                    printFoundObjects();
                }
                 // ROS_INFO_STREAM(tablesVec.size());
               }
@@ -257,11 +262,13 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
 
                   // ROS_INFO("MidPointDiff = %f,%f",xMidpointDiff,yMidpointDiff);
                   if(xMidpointDiff > acceptableCenterError){
+                    
                     ROS_INFO_STREAM("Adding MAILBOX xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
                   
                     mb.midX = xMidpoint + currX;
                     mb.midY = yMidpoint + currY;
                     mailBoxVec.push_back(mb);
+                    printFoundObjects();
                   }
                 }
                }
@@ -271,6 +278,7 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
                     mb.midX = xMidpoint + currX;
                     mb.midY = yMidpoint + currY;
                     mailBoxVec.push_back(mb);
+                    printFoundObjects();
                }
               }
             }
