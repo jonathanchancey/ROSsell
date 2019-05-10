@@ -194,11 +194,14 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
                
                 for(int i = 0;i<tablesVec.size();i++){
 
-                  xMidpointDiff = fabs((xMidpoint)-tablesVec[i].midX); // added (xMidpoint) 
-                  yMidpointDiff = fabs((yMidpoint)-tablesVec[i].midY);
+                  // ROS_INFO_STREAM("xMidpointDiff = " << xMidpoint << " - " << -tablesVec[i].midX);
+                  // ROS_INFO_STREAM("xMidpointDiff = " << fabs((xMidpoint)-tablesVec[i].midX));
+                  xMidpointDiff = fabs(xMidpoint)-fabs(tablesVec[i].midX); // added (xMidpoint) 
+                  yMidpointDiff = fabs(yMidpoint)-fabs(tablesVec[i].midY);
 
                   // ROS_INFO("MidPointDiff = %f,%f",xMidpointDiff,yMidpointDiff);
-                  if(xMidpointDiff > acceptableCenterError){
+                  if(xMidpointDiff > acceptableCenterError && yMidpointDiff > acceptableCenterError){
+                    ROS_INFO_STREAM("xMidpointDiff =" <<  xMidpointDiff << "yMidpointDiff = " << xMidpointDiff);
                     ROS_INFO_STREAM("Adding TABLE xmidmidpoint,ypoint" << xMidpoint << "," << yMidpoint);
 
                     table.midX = xMidpoint;
@@ -271,11 +274,17 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
                   
                 for(int i = 0;i<mailBoxVec.size();i++){
 
-                  xMidpointDiff = fabs((xMidpoint) - mailBoxVec[i].midX);
-                  yMidpointDiff = fabs((yMidpoint) - mailBoxVec[i].midY);
+
+
+                  xMidpointDiff = fabs(xMidpoint) - fabs(mailBoxVec[i].midX);
+                  yMidpointDiff = fabs(yMidpoint) - fabs(mailBoxVec[i].midY);
 
                   // ROS_INFO("MidPointDiff = %f,%f",xMidpointDiff,yMidpointDiff);
-                  if(xMidpointDiff > acceptableCenterError){
+                  if(xMidpointDiff > acceptableCenterError && yMidpointDiff > acceptableCenterError){
+                    // ROS_INFO_STREAM("xMidpointDiff = " << xMidpoint << " - " << -mailBoxVec[i].midX);
+                    // ROS_INFO_STREAM("xMidpointDiff = " << fabs((xMidpoint)-mailBoxVec[i].midX));
+                    ROS_INFO_STREAM("xMidpointDiff =" <<  xMidpointDiff << "yMidpointDiff = " << xMidpointDiff);
+
                     
                     ROS_INFO_STREAM("Adding MAILBOX xmidmidpoint,ypoint" << xMidpoint << "," << yMidpoint);
                   
