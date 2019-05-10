@@ -42,7 +42,7 @@ map<double, double>::iterator itr;
 double currX = 0;
 double currY = 0;
 double currTheta = 0;
-double angle = 0;
+double yaw = 0;
 
 struct Tables{
   double midX,midY;
@@ -59,7 +59,7 @@ void amclReceived(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
     currX = msg->pose.pose.position.x;
     currY = msg->pose.pose.position.y;
     currTheta = msg->pose.pose.orientation.w;
-    angle = atan2(2.0*(msg->pose.pose.orientation.y*msg->pose.pose.orientation.z + msg->pose.pose.orientation.w*msg->pose.pose.orientation.x),msg->pose.pose.orientation.w*msg->pose.pose.orientation.w - msg->pose.pose.orientation.x*msg->pose.pose.orientation.x - msg->pose.pose.orientation.y*msg->pose.pose.orientation.y + msg->pose.pose.orientation.z*msg->pose.pose.orientation.z);
+    yaw = atan2(2.0*(msg->pose.pose.orientation.y*msg->pose.pose.orientation.z + msg->pose.pose.orientation.w*msg->pose.pose.orientation.x),msg->pose.pose.orientation.w*msg->pose.pose.orientation.w - msg->pose.pose.orientation.x*msg->pose.pose.orientation.x - msg->pose.pose.orientation.y*msg->pose.pose.orientation.y + msg->pose.pose.orientation.z*msg->pose.pose.orientation.z);
     
    ROS_INFO_STREAM("this is angle" <<angle << " ");
   
