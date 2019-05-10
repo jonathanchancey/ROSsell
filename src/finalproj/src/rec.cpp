@@ -226,7 +226,7 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
 
 
                   
-               if(tablesVec.size() >= 1){// changed to >= from > because it starts at 0 
+               if(mailBoxVec.size() >= 1){// changed to >= from > because it starts at 0 
                   
                 for(int i = 0;i<tablesVec.size();i++){
 
