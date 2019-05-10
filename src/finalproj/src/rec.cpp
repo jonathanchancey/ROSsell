@@ -42,6 +42,7 @@ map<double, double>::iterator itr;
 double currX = 0;
 double currY = 0;
 double currTheta = 0;
+double yaw = 0;
 
 struct Tables{
   double midX,midY;
@@ -58,7 +59,10 @@ void amclReceived(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
     currX = msg->pose.pose.position.x;
     currY = msg->pose.pose.position.y;
     currTheta = msg->pose.pose.orientation.w;
-
+    yaw = atan2(2.0*(msg->pose.pose.orientation.y*msg->pose.pose.orientation.z + msg->pose.pose.orientation.w*msg->pose.pose.orientation.x),msg->pose.pose.orientation.w*msg->pose.pose.orientation.w - msg->pose.pose.orientation.x*msg->pose.pose.orientation.x - msg->pose.pose.orientation.y*msg->pose.pose.orientation.y + msg->pose.pose.orientation.z*msg->pose.pose.orientation.z);
+    
+   ROS_INFO_STREAM("this is angle" <<angle << " ");
+  
 
 }
 
@@ -427,6 +431,7 @@ public:
     scan_pub3_.publish(ptCloudAux);
 
     scan_pub_.publish(cloud);
+    
   }
 };
 
@@ -436,6 +441,8 @@ int main(int argc, char** argv){
   LaserScanToPointCloud lstopc(n);
   Subscriber mapSub = n.subscribe("map", 1000, mapConvert);
   Subscriber acmlSub = n.subscribe("/amcl_pose", 2000, &amclReceived);
+
+ 
 
   
 
