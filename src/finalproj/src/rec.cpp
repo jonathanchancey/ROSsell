@@ -7,7 +7,7 @@
 #include "geometry_msgs/Point32.h"
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <sensor_msgs/PointCloud2.h>
-
+#include <std_msgs/Bool.h>
 #include <pcl_ros/transforms.h>
 #include <pcl/filters/voxel_grid.h>
 #include <nav_msgs/OccupancyGrid.h>
@@ -31,11 +31,9 @@ sensor_msgs::PointCloud2 ptCloudFiltered;
 sensor_msgs::PointCloud2 ptCloudAux;
 sensor_msgs::PointCloud filteredCloud;
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster (new pcl::PointCloud<pcl::PointXYZ>);
-
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_map_cluster (new pcl::PointCloud<pcl::PointXYZ>);
 sensor_msgs::PointCloud2 ptMapCloudFiltered;
 map<double,double> objPoints;
-
 vector<double> X;
 vector<double> Y;
 map<double, double>::iterator itr;
@@ -43,6 +41,7 @@ double currX = 0;
 double currY = 0;
 double currTheta = 0;
 double yaw = 0;
+bool goalDone = false;
 
 struct Tables{
   double midX,midY;
@@ -54,6 +53,13 @@ struct MailBoxes{
 vector<Tables> tablesVec;
 vector<MailBoxes> mailBoxVec;
 
+void goalReceived(const std_msgs::Bool::ConstPtr& msg){
+
+    goalDone = msg->data;
+    
+
+}
+
 void amclReceived(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg){
 
     currX = msg->pose.pose.position.x;
@@ -61,7 +67,7 @@ void amclReceived(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& msg)
     currTheta = msg->pose.pose.orientation.w;
     yaw = atan2(2.0*(msg->pose.pose.orientation.y*msg->pose.pose.orientation.z + msg->pose.pose.orientation.w*msg->pose.pose.orientation.x),msg->pose.pose.orientation.w*msg->pose.pose.orientation.w - msg->pose.pose.orientation.x*msg->pose.pose.orientation.x - msg->pose.pose.orientation.y*msg->pose.pose.orientation.y + msg->pose.pose.orientation.z*msg->pose.pose.orientation.z);
     
-   ROS_INFO_STREAM("this is angle" <<angle << " ");
+  //  ROS_INFO_STREAM("this is angle" << yaw << " ");
   
 
 }
@@ -82,15 +88,18 @@ void mapConvert(const nav_msgs::OccupancyGrid::ConstPtr& msg){
 // prints objects found so far
 void printFoundObjects(){
   // ROS_INFO("Entered printFoundObjects()");
-  if (mailBoxVec.size() > 0){
-    for (int i = 0; i < mailBoxVec.size();i++){
-      ROS_INFO("mailbox[%d] at position &f,%f",i,mailBoxVec[i].midX,mailBoxVec[i].midY); 
+
+  ROS_INFO_STREAM("Found Objects List:");
+
+  if (!tablesVec.empty()){
+    for (int i = 0; i < tablesVec.size(); i++){
+      ROS_INFO_STREAM("tables[" << i << "]" << " at position " << tablesVec[i].midX << "," << tablesVec[i].midY);
     }
   }
 
-  if (tablesVec.size() > 0){
-    for (int i = 0; i < tablesVec.size();i++){
-      ROS_INFO("table[%d] at position &f,%f",i,tablesVec[i].midX,tablesVec[i].midY); 
+  if (!mailBoxVec.empty()){
+    for (int i = 0; i < mailBoxVec.size(); i++){
+      ROS_INFO_STREAM("mailbox[" << i << "]" << " at position " << mailBoxVec[i].midX << "," << mailBoxVec[i].midY);
     }
   }
 }
@@ -125,6 +134,9 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
     double thresholdWidth  = 1.8;
     double thresholdLength = 1.32;
 
+    x = x + currX;
+    y = y + currY;
+
     double x2 = 0;
     double y2 = 0;
 
@@ -148,11 +160,15 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
 
     double acceptableCenterError = 1.0; // accounts for cloud distribution
     for(int i  = 0; i < pt->points.size(); i++){
-        x2 = pt->points[i].x;
-        y2 = pt->points[i].y;
+      if (!goalDone){
+          break;
+      }
+        x2 = pt->points[i].x + currX;
+        y2 = pt->points[i].y + currY;
 
         xdiff = fabs(x-x2);
         ydiff = fabs(y-y2);
+
         //ROS_INFO_STREAM(xdiff);
         //ROS_INFO_STREAM(ydiff);
         // if(inRange(thresholdWidth - acceptablePointError, thresholdWidth + acceptablePointError, xdiff)){
@@ -178,25 +194,31 @@ bool tableMaybe(double x, double y, sensor_msgs::PointCloud* pt){
                
                 for(int i = 0;i<tablesVec.size();i++){
 
-                  xMidpointDiff = fabs((xMidpoint + currX)-tablesVec[i].midX); // added (xMidpoint + currX) 
-                  yMidpointDiff = fabs((yMidpoint + currX)-tablesVec[i].midY);
+                  // ROS_INFO_STREAM("xMidpointDiff = " << xMidpoint << " - " << -tablesVec[i].midX);
+                  // ROS_INFO_STREAM("xMidpointDiff = " << fabs((xMidpoint)-tablesVec[i].midX));
+                  xMidpointDiff = fabs(xMidpoint)-fabs(tablesVec[i].midX); // added (xMidpoint) 
+                  yMidpointDiff = fabs(yMidpoint)-fabs(tablesVec[i].midY);
 
                   // ROS_INFO("MidPointDiff = %f,%f",xMidpointDiff,yMidpointDiff);
-                  if(xMidpointDiff > acceptableCenterError){
-                    ROS_INFO_STREAM("Adding TABLE xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
+                  if(xMidpointDiff > acceptableCenterError && yMidpointDiff > acceptableCenterError){
+                    ROS_INFO_STREAM("xMidpointDiff =" <<  xMidpointDiff << "yMidpointDiff = " << xMidpointDiff);
+                    ROS_INFO_STREAM("Adding TABLE xmidmidpoint,ypoint" << xMidpoint << "," << yMidpoint);
 
-                    table.midX = xMidpoint + currX;
-                    table.midY = yMidpoint + currY;
+                    table.midX = xMidpoint;
+                    table.midY = yMidpoint;
                     tablesVec.push_back(table);
+                    printFoundObjects();
+                    return 0;
                   }
                 }
                }
                else{
-                  ROS_INFO_STREAM("Adding THE FIRST TABLE point xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
+                  ROS_INFO_STREAM("Adding THE FIRST TABLE point xmidmidpoint,ypoint" << xMidpoint << "," << yMidpoint);
 
-                    table.midX = xMidpoint + currX;
-                    table.midY = yMidpoint + currY;
+                    table.midX = xMidpoint;
+                    table.midY = yMidpoint;
                     tablesVec.push_back(table);
+                    printFoundObjects();
                }
                 // ROS_INFO_STREAM(tablesVec.size());
               }
@@ -248,29 +270,39 @@ bool maybeMailbox(double x, double y, sensor_msgs::PointCloud* pt){
 
 
                   
-               if(mailBoxVec.size() >= 1){// changed to >= from > because it starts at 0 
+               if(!mailBoxVec.empty()){// changed to >= from > because it starts at 0 
                   
                 for(int i = 0;i<mailBoxVec.size();i++){
 
-                  xMidpointDiff = fabs((xMidpoint + currX) - mailBoxVec[i].midX);
-                  yMidpointDiff = fabs((yMidpoint + currX) - mailBoxVec[i].midY);
+
+
+                  xMidpointDiff = fabs(xMidpoint) - fabs(mailBoxVec[i].midX);
+                  yMidpointDiff = fabs(yMidpoint) - fabs(mailBoxVec[i].midY);
 
                   // ROS_INFO("MidPointDiff = %f,%f",xMidpointDiff,yMidpointDiff);
-                  if(xMidpointDiff > acceptableCenterError){
-                    ROS_INFO_STREAM("Adding MAILBOX xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
+                  if(xMidpointDiff > acceptableCenterError && yMidpointDiff > acceptableCenterError){
+                    // ROS_INFO_STREAM("xMidpointDiff = " << xMidpoint << " - " << -mailBoxVec[i].midX);
+                    // ROS_INFO_STREAM("xMidpointDiff = " << fabs((xMidpoint)-mailBoxVec[i].midX));
+                    ROS_INFO_STREAM("xMidpointDiff =" <<  xMidpointDiff << "yMidpointDiff = " << xMidpointDiff);
+
+                    
+                    ROS_INFO_STREAM("Adding MAILBOX xmidmidpoint,ypoint" << xMidpoint << "," << yMidpoint);
                   
-                    mb.midX = xMidpoint + currX;
-                    mb.midY = yMidpoint + currY;
+                    mb.midX = xMidpoint;
+                    mb.midY = yMidpoint;
                     mailBoxVec.push_back(mb);
+                    printFoundObjects();
+                    return 0;
                   }
                 }
                }
                else{
-                  ROS_INFO_STREAM("Adding the FIRST MAILBOX xmidmidpoint,ypoint" << xMidpoint + currX << "," << yMidpoint + currY);
+                  ROS_INFO_STREAM("Adding the FIRST MAILBOX xmidmidpoint,ypoint" << xMidpoint << "," << yMidpoint);
                    
-                    mb.midX = xMidpoint + currX;
-                    mb.midY = yMidpoint + currY;
+                    mb.midX = xMidpoint;
+                    mb.midY = yMidpoint;
                     mailBoxVec.push_back(mb);
+                    printFoundObjects();
                }
               }
             }
@@ -416,13 +448,15 @@ public:
         
     // }
 
-    cloud_filtered->points[0].x;
-    for (int i = 0; i < filteredCloud.points.size();i++){
+    // cloud_filtered->points[0].x;
+    //if (goalDone){ // ONLY calls detection functions if goalDone is true
+      for (int i = 0; i < filteredCloud.points.size();i++){
         //ROS_INFO("cloud_filtered->points[%d/%d].xy = %f,%f",i ,cloud_filtered->points.size(), cloud_filtered->points[i].x,cloud_filtered->points[i].y);
         tableMaybe(filteredCloud.points[i].x, filteredCloud.points[i].y,&filteredCloud);// TODO may need to change filteredCloud
         maybeMailbox(filteredCloud.points[i].x, filteredCloud.points[i].y,&filteredCloud);// TODO may need to change filteredCloud
-
-    }
+      }
+    //}
+    
     // tableMaybe(-8.0,-2.0,&cloud_filtered);
 
     scan_pub4_.publish(filteredCloud);
@@ -441,9 +475,7 @@ int main(int argc, char** argv){
   LaserScanToPointCloud lstopc(n);
   Subscriber mapSub = n.subscribe("map", 1000, mapConvert);
   Subscriber acmlSub = n.subscribe("/amcl_pose", 2000, &amclReceived);
-
- 
-
+  Subscriber goalSub = n.subscribe("/fireFire", 1000, &goalReceived);
   
 
   spin();
